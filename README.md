@@ -1,2 +1,2 @@
 # FEUP-AIAD
-The projects develop in the curricular unit AIAD
+The projects developed in the lecture AIAD

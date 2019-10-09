@@ -28,8 +28,8 @@ hs_err_pid*
 
 
 # Local files
-./MTPs-Main-Container.txt
-./APDescription.txt
+MTPs-Main-Container.txt
+APDescription.txt
 
 
 # End of https://www.gitignore.io/api/java

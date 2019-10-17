@@ -85,5 +85,36 @@ public class CompanyAgent extends Agent {
 			myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot register with DF", e);
 			doDelete();
 		}
+
+		// Send message to Economy to inform there is a new company
+
+		DFAgentDescription dfdEconomy = new DFAgentDescription();
+		ServiceDescription sdEconomy  = new ServiceDescription();
+		sdEconomy.setType("EconomyAgent");
+		dfdEconomy.addServices(sdEconomy);
+		
+		AID economyID;
+
+		// Search the DF
+		try {
+			DFAgentDescription[] result = DFService.search(this, dfdEconomy);
+			System.out.println("NUMBER OF RESULTS: " + result.length);
+			if (result.length > 0)
+				economyID = result[0].getName();
+			else {
+				System.out.println("ERROR - Economy not found!");
+				return;
+			}
+		} catch (FIPAException fe) {
+			fe.printStackTrace();
+			return;
+		}
+
+		// Actually send message TODO: Change content, might want more stuff
+		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+		msg.setContent(getLocalName());
+		msg.addReceiver(economyID);
+		send(msg);
+		
 	}
 }

@@ -69,6 +69,9 @@ public class CompanyAgent extends Agent {
 
 
 	protected void setup() {
+		
+		System.out.println("\t> Starting Company: " + getLocalName());
+		
 		// Registration with the DF 
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();   
@@ -98,7 +101,7 @@ public class CompanyAgent extends Agent {
 		// Search the DF
 		try {
 			DFAgentDescription[] result = DFService.search(this, dfdEconomy);
-			System.out.println("NUMBER OF RESULTS: " + result.length);
+			// System.out.println("NUMBER OF RESULTS: " + result.length);
 			if (result.length > 0)
 				economyID = result[0].getName();
 			else {

@@ -1,10 +1,24 @@
 #!/bin/bash
 
-companySimulation="java -cp lib/jade.jar:classes jade.Boot -gui"
+# Start the economy
+startEconomy="java -cp lib/jade.jar:classes jade.Boot -agents eco:agents.EconomyAgent.EconomyAgent"
 
-for i in `seq 2 $1`
+#============================#
+
+# Start the companies
+
+# Run at least 1 company
+if [ $# -eq 0 ]
+  then
+    numberOfCompanies=1
+  else
+    numberOfCompanies=$1
+fi
+
+echo "Starting $numberOfCompanies companies"
+for i in `seq 1 $numberOfCompanies`
 do
-    companySimulation="$companySimulation company${i}:agents.CompanyAgent.CompanyAgent"
+  startEconomy="$startEconomy;company${i}:agents.CompanyAgent.CompanyAgent"
 done
 
-$companySimulation
+$startEconomy

@@ -125,7 +125,8 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void deal(ACLMessage msg) {
-			if (msg == null) return;
+			if (msg == null)
+				return;
 
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
@@ -141,6 +142,9 @@ public class CompanyAgent extends Agent {
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {
+
+		System.out.println("\t> Starting Company: " + getLocalName());
+
 		// Registration with the DF
 		DFAgentDescription dfd = new DFAgentDescription();
 		ServiceDescription sd = new ServiceDescription();
@@ -158,7 +162,41 @@ public class CompanyAgent extends Agent {
 			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
 			doDelete();
 		}
-		this.getCompanies();
+
+		// Send message to Economy to inform there is a new company
+
+		DFAgentDescription dfdEconomy = new DFAgentDescription();
+		ServiceDescription sdEconomy = new ServiceDescription();
+		sdEconomy.setType("EconomyAgent");
+		dfdEconomy.addServices(sdEconomy);
+
+		AID economyID;
+
+		// Search the DF
+		try {
+			DFAgentDescription[] result = DFService.search(this, dfdEconomy);
+			// System.out.println("NUMBER OF RESULTS: " + result.length);
+			if (result.length > 0)
+				economyID = result[0].getName();
+			else {
+				System.out.println("ERROR - Economy not found!");
+				return;
+			}
+		} catch (FIPAException fe) {
+			fe.printStackTrace();
+			return;
+		}
+
+		// Actually send message TODO: Change content, might want more stuff
+		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+		msg.setContent(getLocalName());
+		msg.addReceiver(economyID);
+		send(msg);
+
+	}
+
+	protected void setState(CompanyState state) {
+		this.state = state;
 	}
 
 	protected void getCompanies() {
@@ -174,9 +212,5 @@ public class CompanyAgent extends Agent {
 			e.printStackTrace();
 		}
 		this.companyAgents = agents;
-	}
-
-	protected void setState(CompanyState state) {
-		this.state = state;
 	}
 }

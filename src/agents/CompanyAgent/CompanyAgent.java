@@ -1,5 +1,7 @@
 package agents.CompanyAgent;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import jade.core.*;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
@@ -10,6 +12,8 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAException;
 
+import agents.CompanyAgent.CompanyGlobals.*;
+
 public class CompanyAgent extends Agent {
 
 	/**
@@ -18,72 +22,161 @@ public class CompanyAgent extends Agent {
 	private static final long serialVersionUID = 1L;
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 
-	private class CompanyBehaviour extends Behaviour {
+	private DFAgentDescription[] companyAgents;
+
+	private CompanyState state = CompanyState.SEARCH;
+
+	private class CompanyBehaviour extends TickerBehaviour {
 
 		/**
 		 *
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public CompanyBehaviour(Agent a) {
-			super(a);
+		public CompanyBehaviour(Agent a, int miliseconds) {
+			super(a, miliseconds);
 		}
 
-		public void action() {
-			ACLMessage  msg = myAgent.receive();
-			
-			if(msg != null){
-				ACLMessage reply = msg.createReply();
+		public void onTick() {
+			ACLMessage msg = this.listen();
 
-				if(msg.getPerformative()== ACLMessage.INFORM){
-					String content = msg.getContent();
-					if ((content != null) && (content.indexOf("your turn") != -1)){
-						myLogger.log(Logger.INFO, "Agent "+getLocalName()+" - Received turn change message from "+msg.getSender().getLocalName());
-						reply.setPerformative(ACLMessage.INFORM);
-						reply.setContent("gotcha");
-					}
-					else{
-						myLogger.log(Logger.INFO, "Agent "+getLocalName()+" - Unexpected request ["+content+"] received from "+msg.getSender().getLocalName());
-						reply.setPerformative(ACLMessage.REFUSE);
-						reply.setContent("( UnexpectedContent ("+content+"))");
-					}
+			this.updateState(msg);
 
-				}
-				else {
-					myLogger.log(Logger.INFO, "Agent "+getLocalName()+" - Unexpected message ["+ACLMessage.getPerformative(msg.getPerformative())+"] received from "+msg.getSender().getLocalName());
-					reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-					reply.setContent("( (Unexpected-act "+ACLMessage.getPerformative(msg.getPerformative())+") )");   
-				}
-				send(reply);
-			}
-			else {
-				block();
+			switch (state) {
+			case SEARCH:
+				this.search();
+			case BUY:
+				this.buy(msg);
+			case MARKET:
+				this.market();
+			case DEAL:
+				this.deal(msg);
+			default:
+				this.search();
 			}
 		}
 
-		@Override
-		public boolean done() {
-			return false;
+		public ACLMessage listen() {
+			return myAgent.receive();
+		}
+
+		public void updateState(ACLMessage msg) {
+			if (msg != null) {
+
+				switch (msg.getPerformative()) {
+				case ACLMessage.PROPOSE:
+					if (state == CompanyState.SEARCH) {
+						String content = msg.getContent();
+						if ((content != null) && (content.indexOf("BUY") != -1)) {
+							setState(CompanyState.DEAL);
+							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY message from "
+									+ msg.getSender().getLocalName());
+						}
+					}
+				case ACLMessage.ACCEPT_PROPOSAL:
+					if (state == CompanyState.BUY) {
+						String content = msg.getContent();
+						if ((content != null) && (content.indexOf("DEAL") != -1)) {
+							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received DEAL message from "
+									+ msg.getSender().getLocalName());
+						}
+					}
+				case ACLMessage.REJECT_PROPOSAL:
+					if (state == CompanyState.BUY) {
+						String content = msg.getContent();
+						setState(CompanyState.SEARCH);
+						if ((content != null) && (content.indexOf("DEAL") != -1)) {
+							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUSY message from "
+									+ msg.getSender().getLocalName());
+						}
+					}
+				case ACLMessage.INFORM:
+					if (state == CompanyState.BUY) {
+						String content = msg.getContent();
+						setState(CompanyState.SEARCH);
+						if ((content != null) && (content.indexOf("ACTION") != -1)) {
+							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION message from "
+									+ msg.getSender().getLocalName());
+						}
+					}
+				default:
+				}
+			} else {
+				setState(CompanyState.BUY);
+			}
+		}
+
+		public void search() {
+			int agentsMax = companyAgents.length;
+			int companyIndex = ThreadLocalRandom.current().nextInt(0, agentsMax);
+			ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+			msg.setContent("BUY");
+			msg.addReceiver(companyAgents[companyIndex].getName());
+			setState(CompanyState.BUY);
+			send(msg);
+		}
+
+		public void buy(ACLMessage msg) {
+
+		}
+
+		public void market() {
+
+		}
+
+		public void deal(ACLMessage msg) {
+			if (msg == null) return;
+
+			ACLMessage reply = msg.createReply();
+			reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+			reply.setContent("DEAL");
+
+			ACLMessage action = msg.createReply();
+			reply.setPerformative(ACLMessage.INFORM);
+			reply.setContent("ACTION");
+
+			send(reply);
+			send(action);
 		}
 	} // END of inner class CompanyBehaviour
 
-
 	protected void setup() {
-		// Registration with the DF 
+		// Registration with the DF
 		DFAgentDescription dfd = new DFAgentDescription();
-		ServiceDescription sd = new ServiceDescription();   
-		sd.setType("CompanyAgent"); 
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType("CompanyAgent");
 		sd.setName(getName());
 		sd.setOwnership("FEUP");
 		dfd.setName(getAID());
 		dfd.addServices(sd);
 		try {
-			DFService.register(this,dfd);
-			CompanyBehaviour companyBehaviour = new  CompanyBehaviour(this);
+			DFService.register(this, dfd);
+			int ticks = ThreadLocalRandom.current().nextInt(5, 11) * 1000;
+			CompanyBehaviour companyBehaviour = new CompanyBehaviour(this, ticks);
 			addBehaviour(companyBehaviour);
 		} catch (FIPAException e) {
-			myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot register with DF", e);
+			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
 			doDelete();
 		}
+		this.getCompanies();
+	}
+
+	protected void getCompanies() {
+		DFAgentDescription dfd = new DFAgentDescription();
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType("CompanyAgent");
+		dfd.addServices(sd);
+		DFAgentDescription[] agents = null;
+		try {
+			agents = DFService.search(this, dfd);
+		} catch (FIPAException e) {
+			agents = new DFAgentDescription[0];
+			e.printStackTrace();
+		}
+		this.companyAgents = agents;
+	}
+
+	protected void setState(CompanyState state) {
+		this.state = state;
 	}
 }

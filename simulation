@@ -1,10 +1,12 @@
 #!/bin/bash
 
-companySimulation="java -cp lib/jade.jar:classes jade.Boot -gui"
+companySimulation="java -cp lib/jade.jar:classes jade.Boot -gui -agents "
 
-for i in `seq 2 $1`
+for i in `seq 1 $1`
 do
-    companySimulation="$companySimulation company${i}:agents.CompanyAgent.CompanyAgent"
+    agents="${agents}company${i}:agents.CompanyAgent.CompanyAgent;"
 done
 
-$companySimulation
+agents="${agents::-1}"
+
+$companySimulation $agents

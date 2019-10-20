@@ -113,6 +113,11 @@ public class CompanyAgent extends Agent {
 
 		public void search() {
 			int agentsMax = companyAgents.length;
+
+			if (agentsMax == 0) {
+				return;
+			}
+
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, agentsMax);
 			ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 			msg.setContent("BUY");

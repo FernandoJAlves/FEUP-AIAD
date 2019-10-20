@@ -57,7 +57,12 @@ public class CompanyAgent extends Agent {
 		}
 
 		public ACLMessage listen() {
-			return myAgent.receive();
+			ACLMessage msg = myAgent.receive();
+			if (msg != null && 
+			msg.getSender().getLocalName().equals(getLocalName())) {
+				return null;
+			}
+			return msg;
 		}
 
 		public void updateState(ACLMessage msg) {
@@ -162,6 +167,8 @@ public class CompanyAgent extends Agent {
 			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
 			doDelete();
 		}
+		
+		this.getCompanies();
 
 		// Send message to Economy to inform there is a new company
 

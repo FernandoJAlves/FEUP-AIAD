@@ -1,7 +1,7 @@
 package agents.EconomyAgent;
 
 import java.util.HashMap;
-import java.util.Random; 
+import java.util.concurrent.ThreadLocalRandom;
 
 import jade.core.*;
 import jade.core.behaviours.*;
@@ -12,6 +12,9 @@ import jade.util.Logger;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAException;
+import jade.lang.acl.UnreadableException;
+
+import messages.*;
 
 public class EconomyAgent extends Agent {
 
@@ -29,12 +32,16 @@ public class EconomyAgent extends Agent {
 		}
 
 		public void onTick() {
-			// TODO: Maybe create this as a property of the class, to avoid re-initializing rand every loop
-			Random rand = new Random(); 
+
 			System.out.println("============ PRINTING ============");
 			for (String key : companyValues.keySet()) {
-				companyValues.put(key, rand.nextDouble() * 30);
-				System.out.println("KEY: " + key + " | Value: " + companyValues.get(key));
+				Double currentValue = companyValues.get(key);
+				// Pick next value from a normal distribution with mean=currentValue and std-deviation=1
+				// Min action value is 0.01 (to avoid negative values)
+				Double newValue = Math.max(0.01, (ThreadLocalRandom.current().nextGaussian() * 1 + currentValue));
+
+				companyValues.put(key, newValue);
+				System.out.println("KEY: " + key + " | Value: " + newValue);
 			}
 		}
 
@@ -48,10 +55,28 @@ public class EconomyAgent extends Agent {
 			ACLMessage msg = receive();
 			// TODO: Handle other messages
 			if (msg != null) {
-				// TODO: Right now every company starts with 30.0 in their stock value, change that to be dinamic (maybe come from the msg)
-				System.out.println("\t> Inserting <" + msg.getContent() + "," + 30.0 + ">");
-				companyValues.put(msg.getContent(), 30.0);
-				// TODO: Add a reply?
+				switch (msg.getPerformative()) {
+					case ACLMessage.INFORM:
+						CompanySetupMessage content;
+						try {
+							content = (CompanySetupMessage)msg.getContentObject();
+						} catch (UnreadableException e) {
+							e.printStackTrace();
+							return;
+						}
+
+						System.out.println("\t> Inserting <" + content.companyName + "," + content.companyActionValue + ">");
+						companyValues.put(content.companyName, content.companyActionValue);
+
+						// TODO: Add a reply?
+						break;
+				
+					default:
+						break;
+				}
+				
+				
+
 
 			} else {
 				block();

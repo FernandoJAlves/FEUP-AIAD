@@ -1,6 +1,7 @@
 package agents.CompanyAgent;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.io.IOException;
 
 import jade.core.*;
 import jade.core.behaviours.*;
@@ -13,6 +14,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAException;
 
 import agents.CompanyAgent.CompanyGlobals.*;
+import messages.*;
 
 public class CompanyAgent extends Agent {
 
@@ -187,7 +189,6 @@ public class CompanyAgent extends Agent {
 		// Search the DF
 		try {
 			DFAgentDescription[] result = DFService.search(this, dfdEconomy);
-			// System.out.println("NUMBER OF RESULTS: " + result.length);
 			if (result.length > 0)
 				economyID = result[0].getName();
 			else {
@@ -199,12 +200,20 @@ public class CompanyAgent extends Agent {
 			return;
 		}
 
-		// Actually send message TODO: Change content, might want more stuff
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-		msg.setContent(getLocalName());
+		
+		// Pick starting value for company stock value, between 10 and 50
+		Double actionValue = ThreadLocalRandom.current().nextDouble(10, 51);
+		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue);
+		try {
+			msg.setContentObject(content);			
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+		
 		msg.addReceiver(economyID);
 		send(msg);
-
 	}
 
 	protected void setState(CompanyState state) {

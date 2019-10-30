@@ -1,5 +1,6 @@
 package agents.CompanyAgent;
 
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.io.IOException;
 
@@ -14,6 +15,9 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAException;
 
 import agents.CompanyAgent.CompanyGlobals.*;
+
+import jade.lang.acl.MessageTemplate;
+
 import messages.*;
 
 public class CompanyAgent extends Agent {
@@ -47,23 +51,60 @@ public class CompanyAgent extends Agent {
 			switch (state) {
 			case SEARCH:
 				this.search();
+				break;
 			case BUY:
 				this.buy(msg);
+				break;
 			case NEGOTIATE:
 				this.negotiate(msg);
+				break;
 			case DEAL:
 				this.deal(msg);
+				break;
 			case MARKET:
 				this.market();
+				break;
 			case CLOSE:
 				this.close(msg);
+				break;
 			default:
 				this.search();
+				break;
 			}
 		}
 
 		public ACLMessage listen() {
-			ACLMessage msg = myAgent.receive();
+			MessageTemplate mt = null;
+			MessageTemplate tmp = null;
+			switch (state) {
+			case SEARCH:
+				mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				break;
+			case NEGOTIATE:
+				mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+				tmp = MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL);
+				mt = MessageTemplate.or(mt, tmp);
+				break;
+			case DEAL:
+				mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+				tmp = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				mt = MessageTemplate.or(mt, tmp);
+				break;
+			case BUY:
+				mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+				break;
+			case CLOSE:
+				mt = MessageTemplate.MatchAll();
+				break;
+			case MARKET:
+				mt = MessageTemplate.MatchAll();
+				break;
+			default:
+				mt = MessageTemplate.MatchAll();
+				break;
+
+			}
+			ACLMessage msg = myAgent.receive(mt);
 			if (msg != null && msg.getSender().getLocalName().equals(getLocalName())) {
 				return null;
 			}
@@ -71,6 +112,7 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void updateState(ACLMessage msg) {
+			myLogger.log(Logger.INFO, "Agent " + getLocalName() + " old state: " + state);
 			if (msg != null) {
 
 				switch (msg.getPerformative()) {
@@ -83,6 +125,7 @@ public class CompanyAgent extends Agent {
 									+ msg.getSender().getLocalName());
 						}
 					}
+					break;
 				case ACLMessage.ACCEPT_PROPOSAL:
 					if (state == CompanyState.NEGOTIATE) {
 						String content = msg.getContent();
@@ -92,6 +135,7 @@ public class CompanyAgent extends Agent {
 									+ msg.getSender().getLocalName());
 						}
 					}
+					break;
 				case ACLMessage.REJECT_PROPOSAL:
 					if (state == CompanyState.NEGOTIATE) {
 						String content = msg.getContent();
@@ -101,6 +145,7 @@ public class CompanyAgent extends Agent {
 									+ msg.getSender().getLocalName());
 						}
 					}
+					break;
 				case ACLMessage.REQUEST:
 					if (state == CompanyState.DEAL) {
 						String content = msg.getContent();
@@ -110,6 +155,7 @@ public class CompanyAgent extends Agent {
 									+ msg.getSender().getLocalName());
 						}
 					}
+					break;
 				case ACLMessage.INFORM:
 					if (state == CompanyState.BUY) {
 						String content = msg.getContent();
@@ -119,11 +165,12 @@ public class CompanyAgent extends Agent {
 									+ msg.getSender().getLocalName());
 						}
 					}
+					break;
 				default:
+					break;
 				}
-			} else {
-				setState(CompanyState.SEARCH);
 			}
+			myLogger.log(Logger.INFO, "Agent " + getLocalName() + " new state: " + state);
 		}
 
 		public void search() {
@@ -158,6 +205,14 @@ public class CompanyAgent extends Agent {
 		public void deal(ACLMessage msg) {
 			if (msg == null)
 				return;
+
+			if (msg.getPerformative() == ACLMessage.PROPOSE) {
+				ACLMessage reply = msg.createReply();
+				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+				reply.setContent("BUSY");
+				send(reply);
+				return;
+			}
 
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
@@ -231,17 +286,17 @@ public class CompanyAgent extends Agent {
 		}
 
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-		
+
 		// Pick starting value for company stock value, between 10 and 50
 		Double actionValue = ThreadLocalRandom.current().nextDouble(10, 51);
 		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue);
 		try {
-			msg.setContentObject(content);			
+			msg.setContentObject(content);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
-		
+
 		msg.addReceiver(economyID);
 		send(msg);
 	}
@@ -258,6 +313,7 @@ public class CompanyAgent extends Agent {
 		DFAgentDescription[] agents = null;
 		try {
 			agents = DFService.search(this, dfd);
+			agents = Arrays.stream(agents).filter(agent -> agent.getName() != this.getAID()).toArray(DFAgentDescription[]::new);
 		} catch (FIPAException e) {
 			agents = new DFAgentDescription[0];
 			e.printStackTrace();

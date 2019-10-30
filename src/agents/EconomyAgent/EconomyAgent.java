@@ -22,6 +22,7 @@ public class EconomyAgent extends Agent {
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 
 	private HashMap<String, Double> companyValues = new HashMap<String, Double>();
+	private HashMap<String, HashMap<String, Integer>> companyStocksMap = new HashMap<String, HashMap<String, Integer>>();
 
 	private class EconomyBehaviour extends TickerBehaviour {
 
@@ -33,7 +34,8 @@ public class EconomyAgent extends Agent {
 
 		public void onTick() {
 
-			System.out.println("============ PRINTING ============");
+			System.out.println("\n///////////////////////////////////////////////////////////////\n");
+			System.out.println("============ COMPANY STOCK VALUES ============");
 			for (String key : companyValues.keySet()) {
 				Double currentValue = companyValues.get(key);
 				// Pick next value from a normal distribution with mean=currentValue and std-deviation=1
@@ -42,6 +44,16 @@ public class EconomyAgent extends Agent {
 
 				companyValues.put(key, newValue);
 				System.out.println("KEY: " + key + " | Value: " + newValue);
+			}
+
+			System.out.println("\n============ COMPANY STOCK MAPS ============");
+			for (String keyOuter : companyStocksMap.keySet()) {
+				HashMap<String, Integer> currentCompanyStocks = companyStocksMap.get(keyOuter);
+
+				System.out.println("Company: " + keyOuter + " stocks are in companies: ");
+				for (String keyInner : currentCompanyStocks.keySet()) {
+					System.out.println("\t" + keyInner + " - " + currentCompanyStocks.get(keyInner));
+				}
 			}
 		}
 
@@ -67,6 +79,11 @@ public class EconomyAgent extends Agent {
 
 						System.out.println("\t> Inserting <" + content.companyName + "," + content.companyActionValue + ">");
 						companyValues.put(content.companyName, content.companyActionValue);
+
+						// Build current company stock map (shows where its stocks are located)
+						HashMap<String, Integer> currentCompanyStocks = new HashMap<String, Integer>();
+						currentCompanyStocks.put(content.companyName, content.companyStockAmount);
+						companyStocksMap.put(content.companyName, currentCompanyStocks);
 
 						// TODO: Add a reply?
 						break;

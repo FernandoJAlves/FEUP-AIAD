@@ -89,11 +89,11 @@ public class EconomyAgent extends Agent {
 						break;
 				
 					default:
+						System.out.println("(!) ERROR - UNKNOWN MESSAGE RECEIVED => " + msg.getPerformative() + " | " + msg.getContent());
 						break;
 				}
 				
 				
-
 
 			} else {
 				block();

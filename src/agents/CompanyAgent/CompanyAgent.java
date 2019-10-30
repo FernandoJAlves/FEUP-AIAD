@@ -32,6 +32,8 @@ public class CompanyAgent extends Agent {
 
 	private CompanyState state = CompanyState.SEARCH;
 
+	private static Integer stockAmmount = 10000;
+
 	private class CompanyBehaviour extends TickerBehaviour {
 
 		/**
@@ -289,7 +291,7 @@ public class CompanyAgent extends Agent {
 
 		// Pick starting value for company stock value, between 10 and 50
 		Double actionValue = ThreadLocalRandom.current().nextDouble(10, 51);
-		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue);
+		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, stockAmmount);
 		try {
 			msg.setContentObject(content);
 		} catch (IOException e) {

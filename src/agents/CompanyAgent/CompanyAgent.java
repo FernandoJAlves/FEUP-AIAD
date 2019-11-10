@@ -16,6 +16,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAException;
 
 import agents.CompanyAgent.CompanyGlobals.*;
+import agents.CompanyAgent.CompanyGlobals.CompanyBehaviours;
 
 import jade.lang.acl.MessageTemplate;
 
@@ -39,6 +40,7 @@ public class CompanyAgent extends Agent {
 	private HashMap<String, Integer> companyStocksMap = new HashMap<String, Integer>();
 
 	private CompanyState state = CompanyState.SEARCH;
+	private CompanyBehaviours behaviour = CompanyBehaviours.values()[ThreadLocalRandom.current().nextInt(0, CompanyBehaviours.values().length - 1)];
 
 	private String dealAgent = "";
 
@@ -227,13 +229,26 @@ public class CompanyAgent extends Agent {
 			getCompanies();
 
 			int agentsMax = companyAgents.length;
+			int companyIndex;
 
 			if (agentsMax == 0) {
 				setState(CompanyState.WORK);
 				return;
 			}
 
-			int companyIndex = ThreadLocalRandom.current().nextInt(0, agentsMax);
+			switch (behaviour) {
+			  case STUPID:
+			    companyIndex  = 0
+			    break;
+			  case RANDOM:
+			    companyIndex  = ThreadLocalRandom.current().nextInt(0, agentsMax);
+			    break;
+			  case SMART: // TODO: discuss strategy
+			    companyIndex  = ThreadLocalRandom.current().nextInt(0, agentsMax);
+			    break;
+				// TODO: add more behaviours
+			}
+
 			ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 			msg.setContent("BUY");
 			msg.addReceiver(companyAgents[companyIndex].getName());

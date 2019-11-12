@@ -21,4 +21,9 @@ do
   startEconomy="$startEconomy;company${i}:agents.CompanyAgent.CompanyAgent"
 done
 
+if [ $# -ge 2 ] && [ $2 == "sniffer" ]
+  then
+    startEconomy="$startEconomy;sniffer:jade.tools.sniffer.Sniffer"
+fi
+
 $startEconomy

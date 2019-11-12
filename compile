@@ -2,7 +2,7 @@
 
 echo "Compiling in ${OSTYPE}"
 
-if [ "$1" == "all" ]
+if [ $# == "0" ] || [ "$1" == "all" ]
 then 
     echo "Compiling all the agents"
     javac -classpath lib/jade.jar -d classes src/agents/*/*.java src/messages/*.java

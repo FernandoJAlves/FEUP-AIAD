@@ -85,17 +85,21 @@ public class CompanyAgent extends Agent {
 				mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
 				break;
 			case NEGOTIATE:
-				mt = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+				mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				tmp = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+				mt = MessageTemplate.or(mt, tmp);
 				tmp = MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL);
 				mt = MessageTemplate.or(mt, tmp);
 				break;
 			case DEAL:
-				mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-				tmp = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				tmp = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 				mt = MessageTemplate.or(mt, tmp);
 				break;
 			case BUY:
-				mt = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+				mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				tmp = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+				mt = MessageTemplate.or(mt, tmp);
 				break;
 			case CLOSE:
 				mt = MessageTemplate.MatchAll();
@@ -114,7 +118,8 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void updateState(ACLMessage msg) {
-			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " old state: " + state);
+			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " old state: " +
+			// state);
 			System.out.println("Agent " + getLocalName() + " old state: " + state);
 
 			if (msg != null) {
@@ -126,9 +131,12 @@ public class CompanyAgent extends Agent {
 						if ((content != null) && (content.indexOf("BUY") != -1)) {
 							setState(CompanyState.DEAL);
 							dealAgent = msg.getSender().getLocalName();
-							//myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY message from "
-							//		+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY
+							// message from "
+							// + msg.getSender().getLocalName());
 						}
+					} else {
+						rejectProposals(msg);
 					}
 					break;
 				case ACLMessage.ACCEPT_PROPOSAL:
@@ -136,8 +144,9 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("DEAL") != -1)) {
 							setState(CompanyState.BUY);
-							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received DEAL message from "
-							// 		+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received DEAL
+							// message from "
+							// + msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -146,8 +155,9 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						setState(CompanyState.SEARCH);
 						if ((content != null) && (content.indexOf("BUSY") != -1)) {
-							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUSY message from "
-							// 		+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUSY
+							// message from "
+							// + msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -156,8 +166,9 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						setState(CompanyState.CLOSE);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
-							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION message from "
-							// 		+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION
+							// message from "
+							// + msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -166,8 +177,9 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						setState(CompanyState.SEARCH);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
-							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION message from "
-							// 		+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION
+							// message from "
+							// + msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -176,10 +188,13 @@ public class CompanyAgent extends Agent {
 				}
 			}
 			System.out.println("Agent " + getLocalName() + " new state: " + state);
-			//myLogger.log(Logger.INFO, "Agent " + getLocalName() + " new state: " + state);
+			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " new state: " +
+			// state);
 		}
 
 		public void search() {
+			getCompanies();
+
 			int agentsMax = companyAgents.length;
 
 			if (agentsMax == 0) {
@@ -213,10 +228,7 @@ public class CompanyAgent extends Agent {
 				return;
 
 			if (msg.getPerformative() == ACLMessage.PROPOSE && !msg.getSender().getLocalName().equals(dealAgent)) {
-				ACLMessage reply = msg.createReply();
-				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-				reply.setContent("BUSY");
-				sendCustom(reply);
+				rejectProposals(msg);
 				return;
 			}
 
@@ -242,6 +254,13 @@ public class CompanyAgent extends Agent {
 		public void market() {
 
 		}
+
+		public void rejectProposals(ACLMessage msg) {
+			ACLMessage reply = msg.createReply();
+			reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+			reply.setContent("BUSY");
+			sendCustom(reply);
+		}
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {
@@ -265,8 +284,6 @@ public class CompanyAgent extends Agent {
 			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
 			doDelete();
 		}
-
-		this.getCompanies();
 
 		// Send message to Economy to inform there is a new company
 
@@ -319,7 +336,8 @@ public class CompanyAgent extends Agent {
 		DFAgentDescription[] agents = null;
 		try {
 			agents = DFService.search(this, dfd);
-			agents = Arrays.stream(agents).filter(agent -> !(agent.getName().getName()).equals(this.getAID().getName())).toArray(DFAgentDescription[]::new);
+			agents = Arrays.stream(agents).filter(agent -> !(agent.getName().getName()).equals(this.getAID().getName()))
+					.toArray(DFAgentDescription[]::new);
 			System.out.println("Agents: " + agents.length);
 		} catch (FIPAException e) {
 			agents = new DFAgentDescription[0];
@@ -328,8 +346,9 @@ public class CompanyAgent extends Agent {
 		this.companyAgents = agents;
 	}
 
-	protected void sendCustom (ACLMessage msg) {
-		System.out.println(" -> " + getLocalName() + " is Sending " + ACLMessage.getPerformative(msg.getPerformative()));
+	protected void sendCustom(ACLMessage msg) {
+		System.out
+				.println(" -> " + getLocalName() + " is Sending " + ACLMessage.getPerformative(msg.getPerformative()));
 		send(msg);
 	}
 }

@@ -114,7 +114,9 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void updateState(ACLMessage msg) {
-			myLogger.log(Logger.INFO, "Agent " + getLocalName() + " old state: " + state);
+			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " old state: " + state);
+			System.out.println("Agent " + getLocalName() + " old state: " + state);
+
 			if (msg != null) {
 
 				switch (msg.getPerformative()) {
@@ -123,8 +125,8 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("BUY") != -1)) {
 							setState(CompanyState.DEAL);
-							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY message from "
-									+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY message from "
+							// 		+ msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -133,8 +135,8 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("DEAL") != -1)) {
 							setState(CompanyState.BUY);
-							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received DEAL message from "
-									+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received DEAL message from "
+							// 		+ msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -143,8 +145,8 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						setState(CompanyState.SEARCH);
 						if ((content != null) && (content.indexOf("BUSY") != -1)) {
-							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUSY message from "
-									+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUSY message from "
+							// 		+ msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -153,8 +155,8 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						setState(CompanyState.CLOSE);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
-							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION message from "
-									+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION message from "
+							// 		+ msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -163,8 +165,8 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						setState(CompanyState.SEARCH);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
-							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION message from "
-									+ msg.getSender().getLocalName());
+							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION message from "
+							// 		+ msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -172,7 +174,8 @@ public class CompanyAgent extends Agent {
 					break;
 				}
 			}
-			myLogger.log(Logger.INFO, "Agent " + getLocalName() + " new state: " + state);
+			System.out.println("Agent " + getLocalName() + " new state: " + state);
+			//myLogger.log(Logger.INFO, "Agent " + getLocalName() + " new state: " + state);
 		}
 
 		public void search() {
@@ -187,7 +190,7 @@ public class CompanyAgent extends Agent {
 			msg.setContent("BUY");
 			msg.addReceiver(companyAgents[companyIndex].getName());
 			setState(CompanyState.NEGOTIATE);
-			send(msg);
+			sendCustom(msg);
 		}
 
 		public void negotiate(ACLMessage msg) {
@@ -201,7 +204,7 @@ public class CompanyAgent extends Agent {
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.REQUEST);
 			reply.setContent("ACTION");
-			send(reply);
+			sendCustom(reply);
 		}
 
 		public void deal(ACLMessage msg) {
@@ -212,14 +215,14 @@ public class CompanyAgent extends Agent {
 				ACLMessage reply = msg.createReply();
 				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
 				reply.setContent("BUSY");
-				send(reply);
+				sendCustom(reply);
 				return;
 			}
 
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 			reply.setContent("DEAL");
-			send(reply);
+			sendCustom(reply);
 
 		}
 
@@ -231,7 +234,7 @@ public class CompanyAgent extends Agent {
 			reply.setPerformative(ACLMessage.INFORM);
 			reply.setContent("ACTION");
 
-			send(reply);
+			sendCustom(reply);
 			setState(CompanyState.SEARCH);
 		}
 
@@ -300,7 +303,7 @@ public class CompanyAgent extends Agent {
 		}
 
 		msg.addReceiver(economyID);
-		send(msg);
+		sendCustom(msg);
 	}
 
 	protected void setState(CompanyState state) {
@@ -321,5 +324,10 @@ public class CompanyAgent extends Agent {
 			e.printStackTrace();
 		}
 		this.companyAgents = agents;
+	}
+
+	protected void sendCustom (ACLMessage msg) {
+		System.out.println(" -> " + getLocalName() + " is Sending " + msg.getPerformative(msg.getPerformative()));
+		send(msg);
 	}
 }

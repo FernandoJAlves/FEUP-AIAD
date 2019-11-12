@@ -32,6 +32,8 @@ public class CompanyAgent extends Agent {
 
 	private CompanyState state = CompanyState.SEARCH;
 
+	private String dealAgent = "";
+
 	private static Integer stockAmmount = 10000;
 
 	private class CompanyBehaviour extends TickerBehaviour {
@@ -107,9 +109,7 @@ public class CompanyAgent extends Agent {
 
 			}
 			ACLMessage msg = myAgent.receive(mt);
-			if (msg != null && msg.getSender().getLocalName().equals(getLocalName())) {
-				return null;
-			}
+
 			return msg;
 		}
 
@@ -123,6 +123,7 @@ public class CompanyAgent extends Agent {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("BUY") != -1)) {
 							setState(CompanyState.DEAL);
+							dealAgent = msg.getSender().getLocalName();
 							myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY message from "
 									+ msg.getSender().getLocalName());
 						}
@@ -208,7 +209,7 @@ public class CompanyAgent extends Agent {
 			if (msg == null)
 				return;
 
-			if (msg.getPerformative() == ACLMessage.PROPOSE) {
+			if (msg.getPerformative() == ACLMessage.PROPOSE && !msg.getSender().getLocalName().equals(dealAgent)) {
 				ACLMessage reply = msg.createReply();
 				reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
 				reply.setContent("BUSY");
@@ -315,7 +316,8 @@ public class CompanyAgent extends Agent {
 		DFAgentDescription[] agents = null;
 		try {
 			agents = DFService.search(this, dfd);
-			agents = Arrays.stream(agents).filter(agent -> agent.getName() != this.getAID()).toArray(DFAgentDescription[]::new);
+			agents = Arrays.stream(agents).filter(agent -> !(agent.getName().getName()).equals(this.getAID().getName())).toArray(DFAgentDescription[]::new);
+			System.out.println("Agents: " + agents.length);
 		} catch (FIPAException e) {
 			agents = new DFAgentDescription[0];
 			e.printStackTrace();

@@ -62,6 +62,9 @@ public class CompanyAgent extends Agent {
 			this.updateState(msg);
 
 			switch (state) {
+			case WORK:
+				this.work();
+				break;
 			case SEARCH:
 				this.search();
 				break;
@@ -133,9 +136,9 @@ public class CompanyAgent extends Agent {
 
 			if (msg != null) {
 
-				switch (msg.getPerformative()) {
-				case ACLMessage.PROPOSE:
-					if (state == CompanyState.SEARCH) {
+				switch (state) {
+				case WORK:
+					if (msg.getPerformative() == ACLMessage.PROPOSE) {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("BUY") != -1)) {
 							setState(CompanyState.DEAL);
@@ -145,11 +148,16 @@ public class CompanyAgent extends Agent {
 							// + msg.getSender().getLocalName());
 						}
 					} else {
+
+					}
+					break;
+				case SEARCH:
+					if (msg.getPerformative() == ACLMessage.PROPOSE) {
 						rejectProposals(msg);
 					}
 					break;
-				case ACLMessage.ACCEPT_PROPOSAL:
-					if (state == CompanyState.NEGOTIATE) {
+				case NEGOTIATE:
+					if (msg.getPerformative() == ACLMessage.ACCEPT_PROPOSAL) {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("DEAL") != -1)) {
 							setState(CompanyState.BUY);
@@ -157,21 +165,20 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
-					}
-					break;
-				case ACLMessage.REJECT_PROPOSAL:
-					if (state == CompanyState.NEGOTIATE) {
+					} else if (msg.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
 						String content = msg.getContent();
-						setState(CompanyState.SEARCH);
+						setState(CompanyState.WORK);
 						if ((content != null) && (content.indexOf("BUSY") != -1)) {
 							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUSY
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE) {
+						rejectProposals(msg);
 					}
 					break;
-				case ACLMessage.REQUEST:
-					if (state == CompanyState.DEAL) {
+				case DEAL:
+					if (msg.getPerformative() == ACLMessage.REQUEST) {
 						String content = msg.getContent();
 						setState(CompanyState.CLOSE);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
@@ -179,10 +186,12 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE) {
+						rejectProposals(msg);
 					}
 					break;
-				case ACLMessage.INFORM:
-					if (state == CompanyState.BUY) {
+				case BUY:
+					if (msg.getPerformative() == ACLMessage.INFORM) {
 						String content = msg.getContent();
 						setState(CompanyState.SEARCH);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
@@ -190,6 +199,8 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE) {
+						rejectProposals(msg);
 					}
 					break;
 				default:
@@ -201,12 +212,24 @@ public class CompanyAgent extends Agent {
 			// state);
 		}
 
+		public void work() {
+			// TODO: Increase Capital
+			// TODO: Warn Economy about the work done
+			System.out.println("Agent " + getLocalName() + " is working");
+			System.out.println("Agent " + getLocalName() + " capital:" + ++companyCapital);
+			if (companyCapital >= 10000000) {
+				setState(CompanyState.SEARCH);
+			}
+			return;
+		}
+
 		public void search() {
 			getCompanies();
 
 			int agentsMax = companyAgents.length;
 
 			if (agentsMax == 0) {
+				setState(CompanyState.WORK);
 				return;
 			}
 

@@ -1,5 +1,6 @@
 package agents.CompanyAgent;
 
+import java.util.HashMap;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.io.IOException;
@@ -28,10 +29,14 @@ public class CompanyAgent extends Agent {
 	private static final long serialVersionUID = 1L;
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 
+	// Existing companies returned by getCompanies()
 	private DFAgentDescription[] companyAgents;
 
 	// Current company capital
 	private Integer companyCapital;
+
+	// Map of the currently owned stocks (of any company)
+	private HashMap<String, Integer> companyStocksMap = new HashMap<String, Integer>();
 
 	private CompanyState state = CompanyState.SEARCH;
 
@@ -318,6 +323,9 @@ public class CompanyAgent extends Agent {
 
 		// Company's starting capital is a random value between 30000 and 60000
 		companyCapital = ThreadLocalRandom.current().nextInt(30000, 60001);
+
+		// Company's initial stock map has only 1 entry, the companies' own stock, with value of maxStockAmmout
+		companyStocksMap.put(getLocalName(), maxStockAmmount);
 
 		// Pick starting value for company stock value, between 10 and 50
 		Double actionValue = ThreadLocalRandom.current().nextDouble(10, 51);

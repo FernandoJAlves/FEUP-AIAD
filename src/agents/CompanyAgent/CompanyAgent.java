@@ -18,7 +18,7 @@ import jade.domain.FIPAException;
 import agents.CompanyAgent.CompanyGlobals.*;
 
 import jade.lang.acl.MessageTemplate;
-
+import jade.lang.acl.UnreadableException;
 import messages.*;
 
 public class CompanyAgent extends Agent {
@@ -139,16 +139,14 @@ public class CompanyAgent extends Agent {
 				switch (state) {
 				case WORK:
 					if (msg.getPerformative() == ACLMessage.PROPOSE) {
-						String content = msg.getContent();
-						if ((content != null) && (content.indexOf("BUY") != -1)) {
+						StockOffer offer = getOffer(msg);
+						if ((offer != null) && (offer.getTag().equals("BUY")) {
 							setState(CompanyState.DEAL);
 							dealAgent = msg.getSender().getLocalName();
 							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
-					} else {
-
 					}
 					break;
 				case SEARCH:
@@ -186,7 +184,8 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
-					} else if (msg.getPerformative() == ACLMessage.PROPOSE && !msg.getSender().getLocalName().equals(dealAgent)) {
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE
+							&& !msg.getSender().getLocalName().equals(dealAgent)) {
 						rejectProposals(msg);
 					}
 					break;
@@ -234,9 +233,7 @@ public class CompanyAgent extends Agent {
 			}
 
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, agentsMax);
-			ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
-			msg.setContent("BUY");
-			msg.addReceiver(companyAgents[companyIndex].getName());
+			ACLMessage msg = makeOfferMessage("comp2stock1", 3000, companyAgents[companyIndex].getName());
 			setState(CompanyState.NEGOTIATE);
 			sendCustom(msg);
 		}
@@ -343,7 +340,8 @@ public class CompanyAgent extends Agent {
 		// Company's starting capital is a random value between 30000 and 60000
 		companyCapital = ThreadLocalRandom.current().nextInt(30000, 60001);
 
-		// Company's initial stock map has only 1 entry, the companies' own stock, with value of maxStockAmmout
+		// Company's initial stock map has only 1 entry, the companies' own stock, with
+		// value of maxStockAmmout
 		companyStocksMap.put(getLocalName(), maxStockAmmount);
 
 		// Pick starting value for company stock value, between 10 and 50
@@ -386,5 +384,28 @@ public class CompanyAgent extends Agent {
 		System.out
 				.println(" -> " + getLocalName() + " is Sending " + ACLMessage.getPerformative(msg.getPerformative()));
 		send(msg);
+	}
+
+	protected ACLMessage makeOfferMessage(String stockId, long value, AID receiver) {
+		ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+		try {
+			msg.setContentObject(new StockOffer(stockId, value));
+		} catch (IOException e) {
+			System.out.println("Failed to create stock offer message");
+			e.printStackTrace();
+		}
+		msg.addReceiver(receiver);
+		return msg;
+	}
+
+	protected StockOffer getOffer(ACLMessage msg) {
+		StockOffer so = null;
+		try {
+			so = (StockOffer) msg.getContentObject();
+		} catch (UnreadableException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return so;
 	}
 }

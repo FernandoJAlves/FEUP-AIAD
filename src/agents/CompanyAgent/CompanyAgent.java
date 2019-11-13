@@ -230,6 +230,8 @@ public class CompanyAgent extends Agent {
 			if (msg == null)
 				return;
 
+			// Capture the transaction
+
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.INFORM);
 			reply.setContent("ACTION");

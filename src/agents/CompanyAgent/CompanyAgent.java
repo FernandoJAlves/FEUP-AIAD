@@ -186,7 +186,7 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
-					} else if (msg.getPerformative() == ACLMessage.PROPOSE) {
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE && !msg.getSender().getLocalName().equals(dealAgent)) {
 						rejectProposals(msg);
 					}
 					break;
@@ -259,11 +259,6 @@ public class CompanyAgent extends Agent {
 			if (msg == null)
 				return;
 
-			if (msg.getPerformative() == ACLMessage.PROPOSE && !msg.getSender().getLocalName().equals(dealAgent)) {
-				rejectProposals(msg);
-				return;
-			}
-
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 			reply.setContent("DEAL");
@@ -294,6 +289,7 @@ public class CompanyAgent extends Agent {
 			reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
 			reply.setContent("BUSY");
 			sendCustom(reply);
+			msg = null;
 		}
 	} // END of inner class CompanyBehaviour
 

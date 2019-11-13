@@ -124,9 +124,9 @@ public class CompanyAgent extends Agent {
 
 			if (msg != null) {
 
-				switch (msg.getPerformative()) {
-				case ACLMessage.PROPOSE:
-					if (state == CompanyState.SEARCH) {
+				switch (state) {
+				case WORK:
+					if (msg.getPerformative() == ACLMessage.PROPOSE) {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("BUY") != -1)) {
 							setState(CompanyState.DEAL);
@@ -136,11 +136,13 @@ public class CompanyAgent extends Agent {
 							// + msg.getSender().getLocalName());
 						}
 					} else {
-						rejectProposals(msg);
+
 					}
 					break;
-				case ACLMessage.ACCEPT_PROPOSAL:
-					if (state == CompanyState.NEGOTIATE) {
+				case SEARCH:
+					break;
+				case NEGOTIATE:
+					if (msg.getPerformative() == ACLMessage.ACCEPT_PROPOSAL) {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("DEAL") != -1)) {
 							setState(CompanyState.BUY);
@@ -148,10 +150,7 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
-					}
-					break;
-				case ACLMessage.REJECT_PROPOSAL:
-					if (state == CompanyState.NEGOTIATE) {
+					} else if (msg.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
 						String content = msg.getContent();
 						setState(CompanyState.SEARCH);
 						if ((content != null) && (content.indexOf("BUSY") != -1)) {
@@ -159,10 +158,12 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE) {
+						rejectProposals(msg);
 					}
 					break;
-				case ACLMessage.REQUEST:
-					if (state == CompanyState.DEAL) {
+				case DEAL:
+					if (msg.getPerformative() == ACLMessage.REQUEST) {
 						String content = msg.getContent();
 						setState(CompanyState.CLOSE);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
@@ -170,10 +171,12 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE) {
+						rejectProposals(msg);
 					}
 					break;
-				case ACLMessage.INFORM:
-					if (state == CompanyState.BUY) {
+				case BUY:
+					if (msg.getPerformative() == ACLMessage.INFORM) {
 						String content = msg.getContent();
 						setState(CompanyState.SEARCH);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
@@ -181,6 +184,8 @@ public class CompanyAgent extends Agent {
 							// message from "
 							// + msg.getSender().getLocalName());
 						}
+					} else if (msg.getPerformative() == ACLMessage.PROPOSE) {
+						rejectProposals(msg);
 					}
 					break;
 				default:
@@ -192,12 +197,19 @@ public class CompanyAgent extends Agent {
 			// state);
 		}
 
+		public void work() {
+			// TODO: Increase Capital
+			// TODO: Warn Economy about the work done
+			return;
+		}
+
 		public void search() {
 			getCompanies();
 
 			int agentsMax = companyAgents.length;
 
 			if (agentsMax == 0) {
+				setState(CompanyState.WORK);
 				return;
 			}
 

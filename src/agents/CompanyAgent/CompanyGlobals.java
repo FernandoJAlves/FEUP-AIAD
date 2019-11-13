@@ -1,7 +1,7 @@
 package agents.CompanyAgent;
 
 public class CompanyGlobals {
-    public enum CompanyState {
-        SEARCH, NEGOTIATE, BUY, DEAL, CLOSE, MARKET
+    public static enum CompanyState {
+        WORK, SEARCH, NEGOTIATE, BUY, DEAL, CLOSE, MARKET
     }
 }

@@ -30,11 +30,15 @@ public class CompanyAgent extends Agent {
 
 	private DFAgentDescription[] companyAgents;
 
+	// Current company capital
+	private Integer companyCapital;
+
 	private CompanyState state = CompanyState.SEARCH;
 
 	private String dealAgent = "";
 
-	private static Integer stockAmmount = 10000;
+	// Maximum number of stocks of 1 company
+	private static Integer maxStockAmmount = 10000;
 
 	private class CompanyBehaviour extends TickerBehaviour {
 
@@ -312,9 +316,12 @@ public class CompanyAgent extends Agent {
 
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 
+		// Company's starting capital is a random value between 30000 and 60000
+		companyCapital = ThreadLocalRandom.current().nextInt(30000, 60001);
+
 		// Pick starting value for company stock value, between 10 and 50
 		Double actionValue = ThreadLocalRandom.current().nextDouble(10, 51);
-		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, stockAmmount);
+		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, maxStockAmmount);
 		try {
 			msg.setContentObject(content);
 		} catch (IOException e) {

@@ -18,6 +18,8 @@ import messages.*;
 
 public class EconomyAgent extends Agent {
 
+	private static boolean PRINT_ECONOMY = false;
+
 	private static final long serialVersionUID = 1L;
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 
@@ -34,27 +36,41 @@ public class EconomyAgent extends Agent {
 
 		public void onTick() {
 
-			System.out.println("\n///////////////////////////////////////////////////////////////\n");
-			System.out.println("============ COMPANY STOCK VALUES ============");
+			if (PRINT_ECONOMY) {
+				System.out.println("\n///////////////////////////////////////////////////////////////\n");
+				System.out.println("============ COMPANY STOCK VALUES ============");
+			}
+
 			for (String key : companyValues.keySet()) {
 				Double currentValue = companyValues.get(key);
-				// Pick next value from a normal distribution with mean=currentValue and std-deviation=1
+				// Pick next value from a normal distribution with mean=currentValue and
+				// std-deviation=1
 				// Min action value is 0.01 (to avoid negative values)
 				Double newValue = Math.max(0.01, (ThreadLocalRandom.current().nextGaussian() * 1 + currentValue));
 
 				companyValues.put(key, newValue);
-				System.out.println("KEY: " + key + " | Value: " + newValue);
+
+				if (PRINT_ECONOMY) {
+					System.out.println("KEY: " + key + " | Value: " + newValue);
+				}
+
 			}
 
-			System.out.println("\n============ COMPANY STOCK MAPS ============");
+			if (PRINT_ECONOMY) {
+				System.out.println("\n============ COMPANY STOCK MAPS ============");
+			}
+
 			for (String keyOuter : companyStocksMap.keySet()) {
 				HashMap<String, Integer> currentCompanyStocks = companyStocksMap.get(keyOuter);
 
-				System.out.println("Company: " + keyOuter + " stocks are in companies: ");
-				for (String keyInner : currentCompanyStocks.keySet()) {
-					System.out.println("\t" + keyInner + " - " + currentCompanyStocks.get(keyInner));
+				if (PRINT_ECONOMY) {
+					System.out.println("Company: " + keyOuter + " stocks are in companies: ");
+					for (String keyInner : currentCompanyStocks.keySet()) {
+						System.out.println("\t" + keyInner + " - " + currentCompanyStocks.get(keyInner));
+					}
 				}
 			}
+
 		}
 
 	} // END of inner class EconomyBehaviour
@@ -63,56 +79,52 @@ public class EconomyAgent extends Agent {
 
 		private static final long serialVersionUID = 1L;
 
-		public void action () {
+		public void action() {
 			ACLMessage msg = receive();
 			// TODO: Handle other messages
 			if (msg != null) {
 				switch (msg.getPerformative()) {
-					case ACLMessage.INFORM:
-						CompanySetupMessage content;
-						try {
-							content = (CompanySetupMessage)msg.getContentObject();
-						} catch (UnreadableException e) {
-							e.printStackTrace();
-							return;
-						}
+				case ACLMessage.INFORM:
+					CompanySetupMessage content;
+					try {
+						content = (CompanySetupMessage) msg.getContentObject();
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+						return;
+					}
 
-						System.out.println("\t> Inserting <" + content.companyName + "," + content.companyActionValue + ">");
-						companyValues.put(content.companyName, content.companyActionValue);
+					System.out
+							.println("\t> Inserting <" + content.companyName + "," + content.companyActionValue + ">");
+					companyValues.put(content.companyName, content.companyActionValue);
 
-						// Build current company stock map (shows where its stocks are located)
-						HashMap<String, Integer> currentCompanyStocks = new HashMap<String, Integer>();
-						currentCompanyStocks.put(content.companyName, content.companyStockAmount);
-						companyStocksMap.put(content.companyName, currentCompanyStocks);
+					// Build current company stock map (shows where its stocks are located)
+					HashMap<String, Integer> currentCompanyStocks = new HashMap<String, Integer>();
+					currentCompanyStocks.put(content.companyName, content.companyStockAmount);
+					companyStocksMap.put(content.companyName, currentCompanyStocks);
 
-						// TODO: Add a reply?
-						break;
-				
-					default:
-						System.out.println("(!) ERROR - UNKNOWN MESSAGE RECEIVED => " + msg.getPerformative() + " | " + msg.getContent());
-						break;
+					// TODO: Add a reply?
+					break;
+
+				default:
+					System.out.println("(!) ERROR - UNKNOWN MESSAGE RECEIVED => " + msg.getPerformative() + " | "
+							+ msg.getContent());
+					break;
 				}
-				
-				
 
 			} else {
 				block();
 			}
 		}
 
-
-
 	} // END of inner class ListeningBehaviour
-
-
 
 	protected void setup() {
 
 		System.out.println("\t> Starting Economy: " + getLocalName());
 
-		// Registration with the DF 
+		// Registration with the DF
 		DFAgentDescription agentDescription = new DFAgentDescription();
-		ServiceDescription serviceDescription = new ServiceDescription();   
+		ServiceDescription serviceDescription = new ServiceDescription();
 
 		serviceDescription.setType("EconomyAgent"); // required
 		serviceDescription.setName(getName()); // required
@@ -130,7 +142,7 @@ public class EconomyAgent extends Agent {
 			addBehaviour(economyBehaviour);
 			addBehaviour(listeningBehaviour);
 		} catch (FIPAException e) {
-			myLogger.log(Logger.SEVERE, "Agent "+getLocalName()+" - Cannot register with DF", e);
+			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
 			doDelete();
 		}
 

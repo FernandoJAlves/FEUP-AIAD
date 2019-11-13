@@ -40,7 +40,8 @@ public class CompanyAgent extends Agent {
 	private HashMap<String, Integer> companyStocksMap = new HashMap<String, Integer>();
 
 	private CompanyState state = CompanyState.SEARCH;
-	private CompanyBehaviours behaviour = CompanyBehaviours.values()[ThreadLocalRandom.current().nextInt(0, CompanyBehaviours.values().length - 1)];
+	// private CompanyPersonality personality = CompanyPersonality.values()[ThreadLocalRandom.current().nextInt(0, CompanyPersonality.values().length - 1)];
+	private CompanyPersonality personality = CompanyPersonality.RANDOM;
 
 	private String dealAgent = "";
 
@@ -236,17 +237,45 @@ public class CompanyAgent extends Agent {
 				return;
 			}
 
-			switch (behaviour) {
-			  case STUPID:
-			    companyIndex  = 0
+			//recebe map valor de acoes [empresa: [valor de acoes, [pares de donos e respetivo # de acoes]]]
+			const companies = [
+			    {
+							name: "company1",
+			        value: 12.3,
+			        owners: [["company2", 50], ["company3", 200]],
+			    },
+			    {
+							name: "company2",
+			        value: 32.6,
+			        owners: [["company1", 50], ["company3", 200], ["company5", 1000]],
+			    },
+			    {
+							name: "company3",
+			        value: 109.3,
+			        owners: [["company4", 1000]],
+			    },
+			    {
+							name: "company4",
+			        value: 40.2,
+			        owners: [["company1", 10], ["company5", 125]],
+			    },
+			    {
+							name: "company5",
+			        value: 89.2,
+			        owners: [["company1", 150], ["company2", 250], ["company4", 175]],
+			    },
+			];
+
+			switch (personality) {
+			  case CAUTIOUS:
+			    companyIndex  = cautiousSearch(companies); // valor mais alto +
+			    break;
+			  case IMPULSIVE:
+			    companyIndex  = impulsiveSearch(companies); // apenas valor mais alto
 			    break;
 			  case RANDOM:
-			    companyIndex  = ThreadLocalRandom.current().nextInt(0, agentsMax);
+			    companyIndex  = randomSearch();
 			    break;
-			  case SMART: // TODO: discuss strategy
-			    companyIndex  = ThreadLocalRandom.current().nextInt(0, agentsMax);
-			    break;
-				// TODO: add more behaviours
 			}
 
 			ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
@@ -405,5 +434,34 @@ public class CompanyAgent extends Agent {
 		System.out
 				.println(" -> " + getLocalName() + " is Sending " + ACLMessage.getPerformative(msg.getPerformative()));
 		send(msg);
+	}
+
+	protected int cautiousSearch(companies) {
+		return ThreadLocalRandom.current().nextInt(0, companyAgents.length);
+	}
+
+
+	protected int impulsiveSearch(companies) {
+		let value = 0;
+		let companiesIndexes = [];
+
+		companies.forEach(function(company) {
+			if(company.value >= value)
+				companiesIndexes.push(findCompany(company.name));
+		});
+
+		return companiesIndexes[ThreadLocalRandom.current().nextInt(0, companiesIndexes.length)];
+	}
+
+
+	protected int randomSearch() {
+		return ThreadLocalRandom.current().nextInt(0, companyAgents.length);
+	}
+
+	protected int findCompany(name){
+		for (let i = 0; i < companyAgents.length; i++) {
+			if(companyAgents[i].getName() === name)
+				return i;
+		}
 	}
 }

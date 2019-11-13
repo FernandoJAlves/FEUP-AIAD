@@ -5,7 +5,7 @@ public class CompanyGlobals {
         WORK, SEARCH, NEGOTIATE, BUY, DEAL, CLOSE, MARKET
     }
 
-    public enum CompanyBehaviours {
-        STUPID, RANDOM, SMART
+    public enum CompanyPersonality {
+        CAUTIOUS, IMPULSIVE, RANDOM
     }
 }

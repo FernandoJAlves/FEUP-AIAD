@@ -140,7 +140,7 @@ public class CompanyAgent extends Agent {
 				case WORK:
 					if (msg.getPerformative() == ACLMessage.PROPOSE) {
 						StockOffer offer = getOffer(msg);
-						if ((offer != null) && (offer.getTag().equals("BUY")) {
+						if ((offer != null) && (offer.getTag().equals("BUY"))) {
 							setState(CompanyState.DEAL);
 							dealAgent = msg.getSender().getLocalName();
 							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY
@@ -403,7 +403,7 @@ public class CompanyAgent extends Agent {
 		try {
 			so = (StockOffer) msg.getContentObject();
 		} catch (UnreadableException e) {
-			// TODO Auto-generated catch block
+			System.out.println("Failed to extract stock offer message");
 			e.printStackTrace();
 		}
 		return so;

@@ -196,6 +196,7 @@ public class CompanyAgent extends Agent {
 					if (msg.getPerformative() == ACLMessage.INFORM) {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
+							companyCapital -= actualOffer.getOfferValue();
 							dealAgent = "";
 							actualOffer = null;
 							setState(CompanyState.SEARCH);
@@ -348,6 +349,7 @@ public class CompanyAgent extends Agent {
 
 		// Company's starting capital is a random value between 30000 and 60000
 		companyCapital = ThreadLocalRandom.current().nextInt(30000, 60001);
+		System.out.printf("\t> %s Capital: %d\n",getLocalName(), companyCapital);
 
 		// Company's initial stock map has only 1 entry, the companies' own stock, with
 		// value of maxStockAmmout
@@ -395,7 +397,7 @@ public class CompanyAgent extends Agent {
 		send(msg);
 	}
 
-	protected ACLMessage makeOfferMessage(String stockId, long value, AID receiver) {
+	protected ACLMessage makeOfferMessage(String stockId, int value, AID receiver) {
 		ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 		
 		try {

@@ -41,6 +41,7 @@ public class CompanyAgent extends Agent {
 	private CompanyState state = CompanyState.SEARCH;
 
 	private String dealAgent = "";
+	private StockOffer actualOffer = null;
 
 	// Maximum number of stocks of 1 company
 	private static Integer maxStockAmmount = 10000;
@@ -141,8 +142,10 @@ public class CompanyAgent extends Agent {
 					if (msg.getPerformative() == ACLMessage.PROPOSE) {
 						StockOffer offer = getOffer(msg);
 						if ((offer != null) && (offer.getTag().equals("BUY"))) {
+							//TODO: Think about the offer
 							setState(CompanyState.DEAL);
 							dealAgent = msg.getSender().getLocalName();
+							actualOffer = offer;
 							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY
 							// message from "
 							// + msg.getSender().getLocalName());
@@ -192,8 +195,10 @@ public class CompanyAgent extends Agent {
 				case BUY:
 					if (msg.getPerformative() == ACLMessage.INFORM) {
 						String content = msg.getContent();
-						setState(CompanyState.SEARCH);
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
+							dealAgent = "";
+							actualOffer = null;
+							setState(CompanyState.SEARCH);
 							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received ACTION
 							// message from "
 							// + msg.getSender().getLocalName());
@@ -233,7 +238,9 @@ public class CompanyAgent extends Agent {
 			}
 
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, agentsMax);
-			ACLMessage msg = makeOfferMessage("comp2stock1", 3000, companyAgents[companyIndex].getName());
+			AID chosenCompany = companyAgents[companyIndex].getName();
+			dealAgent = chosenCompany.getLocalName();
+			ACLMessage msg = makeOfferMessage("comp2stock1", 3000, chosenCompany);
 			setState(CompanyState.NEGOTIATE);
 			sendCustom(msg);
 		}
@@ -274,6 +281,8 @@ public class CompanyAgent extends Agent {
 			reply.setContent("ACTION");
 
 			sendCustom(reply);
+			actualOffer = null;
+			dealAgent = "";
 			setState(CompanyState.SEARCH);
 		}
 
@@ -388,8 +397,11 @@ public class CompanyAgent extends Agent {
 
 	protected ACLMessage makeOfferMessage(String stockId, long value, AID receiver) {
 		ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+		
 		try {
-			msg.setContentObject(new StockOffer(stockId, value));
+			StockOffer so = new StockOffer(stockId, value);
+			actualOffer = so;
+			msg.setContentObject(so);
 		} catch (IOException e) {
 			System.out.println("Failed to create stock offer message");
 			e.printStackTrace();

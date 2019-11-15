@@ -58,6 +58,7 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void onTick() {
+			companyStatePrint(); // Used for debug, may be useful in the final version	
 			ACLMessage msg = this.listen();
 
 			this.updateState(msg);
@@ -131,9 +132,10 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void updateState(ACLMessage msg) {
+			// TODO: Check if these prints can be removed or if Juan needs them			
 			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " old state: " +
 			// state);
-			System.out.println("Agent " + getLocalName() + " old state: " + state);
+			// System.out.println("Agent " + getLocalName() + " old state: " + state);
 
 			if (msg != null) {
 
@@ -196,7 +198,17 @@ public class CompanyAgent extends Agent {
 					if (msg.getPerformative() == ACLMessage.INFORM) {
 						String content = msg.getContent();
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
+							// Decrease capital
 							companyCapital -= actualOffer.getOfferValue();
+							
+							// Increase stock (create entry on hashmap if necessary)
+							if (companyStocksMap.containsKey(actualOffer.getStockId())) {
+								Integer tempStockAmount = companyStocksMap.get(actualOffer.getStockId());
+								companyStocksMap.put(actualOffer.getStockId(), tempStockAmount + actualOffer.getOfferValue());
+							} else {
+								companyStocksMap.put(actualOffer.getStockId(), actualOffer.getOfferValue());
+							}
+
 							dealAgent = "";
 							actualOffer = null;
 							setState(CompanyState.SEARCH);
@@ -212,7 +224,8 @@ public class CompanyAgent extends Agent {
 					break;
 				}
 			}
-			System.out.println("Agent " + getLocalName() + " new state: " + state);
+			// TODO: Check if these prints can be removed or if Juan needs them
+			// System.out.println("Agent " + getLocalName() + " new state: " + state);
 			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " new state: " +
 			// state);
 		}
@@ -241,7 +254,7 @@ public class CompanyAgent extends Agent {
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, agentsMax);
 			AID chosenCompany = companyAgents[companyIndex].getName();
 			dealAgent = chosenCompany.getLocalName();
-			ACLMessage msg = makeOfferMessage("comp2stock1", 3000, chosenCompany);
+			ACLMessage msg = makeOfferMessage("company2", 3000, chosenCompany);
 			setState(CompanyState.NEGOTIATE);
 			sendCustom(msg);
 		}
@@ -275,7 +288,25 @@ public class CompanyAgent extends Agent {
 			if (msg == null)
 				return;
 
-			// Capture the transaction
+			// Company accepted proposal and will now notify the 'buyer'
+			// Update local state and notify Economy
+			
+			// TODO: Mainly here for debug, but may be useful for the final version
+			System.out.println("(!!!) TRANSACTION: " + getLocalName() + " SOLD STOCKS TO ANOTHER COMPANY (!!!)"); 
+
+			// Increase capital 
+			companyCapital += actualOffer.getOfferValue();
+
+			// TODO: Change getOfferValue for number of stocks from message
+			// Decrease stockMap
+			if (companyStocksMap.containsKey(actualOffer.getStockId())) {
+				Integer tempStockAmount = companyStocksMap.get(actualOffer.getStockId());
+				companyStocksMap.put(actualOffer.getStockId(), tempStockAmount - actualOffer.getOfferValue());
+			} else {
+				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getStockId()); // TODO: after we fix message, this print and if/else can probably be deleted
+			}
+
+			// TODO: Notify Economy
 
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.INFORM);
@@ -349,7 +380,7 @@ public class CompanyAgent extends Agent {
 
 		// Company's starting capital is a random value between 30000 and 60000
 		companyCapital = ThreadLocalRandom.current().nextInt(30000, 60001);
-		System.out.printf("\t> %s Capital: %d\n",getLocalName(), companyCapital);
+		System.out.printf("\t> %s Capital: %d\n", getLocalName(), companyCapital);
 
 		// Company's initial stock map has only 1 entry, the companies' own stock, with
 		// value of maxStockAmmout
@@ -383,7 +414,7 @@ public class CompanyAgent extends Agent {
 			agents = DFService.search(this, dfd);
 			agents = Arrays.stream(agents).filter(agent -> !(agent.getName().getName()).equals(this.getAID().getName()))
 					.toArray(DFAgentDescription[]::new);
-			System.out.println("Agents: " + agents.length);
+			// System.out.println("Agents: " + agents.length); TODO: Remove this print?
 		} catch (FIPAException e) {
 			agents = new DFAgentDescription[0];
 			e.printStackTrace();
@@ -392,8 +423,7 @@ public class CompanyAgent extends Agent {
 	}
 
 	protected void sendCustom(ACLMessage msg) {
-		System.out
-				.println(" -> " + getLocalName() + " is Sending " + ACLMessage.getPerformative(msg.getPerformative()));
+		// System.out.println(" -> " + getLocalName() + " is Sending " + ACLMessage.getPerformative(msg.getPerformative())); TODO: remove this print?
 		send(msg);
 	}
 
@@ -421,5 +451,16 @@ public class CompanyAgent extends Agent {
 			e.printStackTrace();
 		}
 		return so;
+	}
+
+	protected void companyStatePrint() {
+		System.out.println("======================");
+		System.out.println(getLocalName() + " state: " + state);
+		System.out.println(getLocalName() + " capital: " + companyCapital);
+		System.out.println(getLocalName() + " stocks: ");
+		for (String keyInner : companyStocksMap.keySet()) {
+			System.out.println("\t" + keyInner + " - " + companyStocksMap.get(keyInner));
+		}
+		System.out.println("======================");
 	}
 }

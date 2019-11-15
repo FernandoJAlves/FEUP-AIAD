@@ -84,7 +84,7 @@ public class EconomyAgent extends Agent {
 			// TODO: Handle other messages
 			if (msg != null) {
 				switch (msg.getPerformative()) {
-				case ACLMessage.INFORM:
+				case ACLMessage.INFORM: {
 					CompanySetupMessage content;
 					try {
 						content = (CompanySetupMessage) msg.getContentObject();
@@ -104,7 +104,20 @@ public class EconomyAgent extends Agent {
 
 					// TODO: Add a reply?
 					break;
+				}
+				case ACLMessage.PROPAGATE: {
+					TransactionNotifyMessage content;
+					try {
+						content = (TransactionNotifyMessage) msg.getContentObject();
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+						return;
+					}
 
+					// TODO: Atualizar o mapa de ações (e o eventualmente mapa de capital de cada empresa)
+
+					break;
+				}
 				default:
 					System.out.println("(!) ERROR - UNKNOWN MESSAGE RECEIVED => " + msg.getPerformative() + " | "
 							+ msg.getContent());

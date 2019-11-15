@@ -28,6 +28,7 @@ public class CompanyAgent extends Agent {
 	 */
 	private static final long serialVersionUID = 1L;
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
+	private AID economyID;
 
 	// Existing companies returned by getCompanies()
 	private DFAgentDescription[] companyAgents;
@@ -305,7 +306,21 @@ public class CompanyAgent extends Agent {
 				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName()); // TODO: after we fix message, this print and if/else can probably be deleted
 			}
 
-			// TODO: Notify Economy
+			
+			// Notify Economy
+			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
+	
+			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
+			try {
+				notifyEconomyMsg.setContentObject(content);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return;
+			}
+			notifyEconomyMsg.addReceiver(economyID);
+			sendCustom(notifyEconomyMsg);
+			// End Notify Economy
+
 
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.INFORM);
@@ -359,13 +374,12 @@ public class CompanyAgent extends Agent {
 		sdEconomy.setType("EconomyAgent");
 		dfdEconomy.addServices(sdEconomy);
 
-		AID economyID;
-
+		AID tempEconomyID; 
 		// Search the DF
 		try {
 			DFAgentDescription[] result = DFService.search(this, dfdEconomy);
 			if (result.length > 0)
-				economyID = result[0].getName();
+				tempEconomyID = result[0].getName();
 			else {
 				System.out.println("ERROR - Economy not found!");
 				return;
@@ -374,6 +388,8 @@ public class CompanyAgent extends Agent {
 			fe.printStackTrace();
 			return;
 		}
+
+		economyID = tempEconomyID;
 
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 

@@ -202,11 +202,11 @@ public class CompanyAgent extends Agent {
 							companyCapital -= actualOffer.getOfferValue();
 							
 							// Increase stock (create entry on hashmap if necessary)
-							if (companyStocksMap.containsKey(actualOffer.getStockId())) {
-								Integer tempStockAmount = companyStocksMap.get(actualOffer.getStockId());
-								companyStocksMap.put(actualOffer.getStockId(), tempStockAmount + actualOffer.getOfferValue());
+							if (companyStocksMap.containsKey(actualOffer.getCompanyName())) {
+								Integer tempStockAmount = companyStocksMap.get(actualOffer.getCompanyName());
+								companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount + actualOffer.getStockCount());
 							} else {
-								companyStocksMap.put(actualOffer.getStockId(), actualOffer.getOfferValue());
+								companyStocksMap.put(actualOffer.getCompanyName(), actualOffer.getStockCount());
 							}
 
 							dealAgent = "";
@@ -254,7 +254,7 @@ public class CompanyAgent extends Agent {
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, agentsMax);
 			AID chosenCompany = companyAgents[companyIndex].getName();
 			dealAgent = chosenCompany.getLocalName();
-			ACLMessage msg = makeOfferMessage("company2", 3000, chosenCompany);
+			ACLMessage msg = makeOfferMessage("company2", 3000, 3000, chosenCompany);
 			setState(CompanyState.NEGOTIATE);
 			sendCustom(msg);
 		}
@@ -297,13 +297,12 @@ public class CompanyAgent extends Agent {
 			// Increase capital 
 			companyCapital += actualOffer.getOfferValue();
 
-			// TODO: Change getOfferValue for number of stocks from message
 			// Decrease stockMap
-			if (companyStocksMap.containsKey(actualOffer.getStockId())) {
-				Integer tempStockAmount = companyStocksMap.get(actualOffer.getStockId());
-				companyStocksMap.put(actualOffer.getStockId(), tempStockAmount - actualOffer.getOfferValue());
+			if (companyStocksMap.containsKey(actualOffer.getCompanyName())) {
+				Integer tempStockAmount = companyStocksMap.get(actualOffer.getCompanyName());
+				companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount - actualOffer.getStockCount());
 			} else {
-				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getStockId()); // TODO: after we fix message, this print and if/else can probably be deleted
+				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName()); // TODO: after we fix message, this print and if/else can probably be deleted
 			}
 
 			// TODO: Notify Economy
@@ -414,7 +413,6 @@ public class CompanyAgent extends Agent {
 			agents = DFService.search(this, dfd);
 			agents = Arrays.stream(agents).filter(agent -> !(agent.getName().getName()).equals(this.getAID().getName()))
 					.toArray(DFAgentDescription[]::new);
-			// System.out.println("Agents: " + agents.length); TODO: Remove this print?
 		} catch (FIPAException e) {
 			agents = new DFAgentDescription[0];
 			e.printStackTrace();
@@ -427,11 +425,11 @@ public class CompanyAgent extends Agent {
 		send(msg);
 	}
 
-	protected ACLMessage makeOfferMessage(String stockId, int value, AID receiver) {
+	protected ACLMessage makeOfferMessage(String companyName, int stockCount, int value, AID receiver) {
 		ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 		
 		try {
-			StockOffer so = new StockOffer(stockId, value);
+			StockOffer so = new StockOffer(companyName, stockCount, value);
 			actualOffer = so;
 			msg.setContentObject(so);
 		} catch (IOException e) {

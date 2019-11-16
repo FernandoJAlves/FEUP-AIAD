@@ -232,14 +232,39 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void work() {
-			// TODO: Increase Capital
 			// TODO: Warn Economy about the work done
-			// TODO: Remove these prints? Kept for debug for now
-			// System.out.println("Agent " + getLocalName() + " is working");
-			// System.out.println("Agent " + getLocalName() + " capital:" + ++companyCapital);
+
+			// While working, a company's capital increases between 0% and 3%
+
+			Integer maxCapitalChange = companyCapital * 1.03;
+			System.out.println("> companyCapital: " + companyCapital);
+			System.out.println("> maxCapitalChange: " + maxCapitalChange);
+
+			companyCapital = ThreadLocalRandom.current().nextInt(companyCapital, maxCapitalChange);
+
+			// Notify Economy - TODO: Function this?
+			// ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.CONFIRM);
+
+			// TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
+			// try {
+			// 	notifyEconomyMsg.setContentObject(content);
+			// } catch (IOException e) {
+			// 	e.printStackTrace();
+			// 	return;
+			// }
+			// notifyEconomyMsg.addReceiver(economyID);
+			// sendCustom(notifyEconomyMsg);
+			// End Notify Economy
+
 			if (companyCapital >= 10000000) {
 				setState(CompanyState.SEARCH);
 			}
+
+			// TODO: Decide if the state should change to SEARCH (depends on the personality?)
+			
+			// TODO: Remove these prints? Kept for debug for now
+			// System.out.println("Agent " + getLocalName() + " is working");
+			// System.out.println("Agent " + getLocalName() + " capital:" + ++companyCapital);
 			return;
 		}
 
@@ -314,7 +339,7 @@ public class CompanyAgent extends Agent {
 			}
 
 
-			// Notify Economy - TODO: Function this (used somewhere else I believe)
+			// Notify Economy - TODO: Function this? (used somewhere else I believe)
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
 	
 			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());

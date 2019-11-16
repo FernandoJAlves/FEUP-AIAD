@@ -2,6 +2,7 @@ package agents.EconomyAgent;
 
 import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.text.DecimalFormat;
 
 import jade.core.*;
 import jade.core.behaviours.*;
@@ -28,6 +29,8 @@ public class EconomyAgent extends Agent {
 	private HashMap<String, HashMap<String, Integer>> companyStocksMap = new HashMap<String, HashMap<String, Integer>>(); // stocks location
 	private HashMap<String, CompanyOtherInfo> companyOtherInfoMap = new HashMap<String, CompanyOtherInfo>(); // company capital and mother-company map
 
+	private static DecimalFormat formatter = new DecimalFormat("#.000");
+
 	private class EconomyBehaviour extends TickerBehaviour {
 
 		private static final long serialVersionUID = 1L;
@@ -52,7 +55,7 @@ public class EconomyAgent extends Agent {
 				companyOtherInfoMap.put(key, currentCompanyInfo);
 
 				if (PRINT_ECONOMY) {
-					System.out.println("NAME: " + key + " | StockValue: " + currentCompanyInfo.stockValue + " | Capital: " + currentCompanyInfo.currentCapital);
+					System.out.println("NAME: " + key + " | StockValue: " + formatter.format(currentCompanyInfo.stockValue) + " | Capital: " + currentCompanyInfo.currentCapital + " | Parent: " + currentCompanyInfo.currentMotherCompany);
 				}
 
 			}

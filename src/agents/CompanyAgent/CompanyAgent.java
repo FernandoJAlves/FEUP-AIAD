@@ -404,13 +404,25 @@ public class CompanyAgent extends Agent {
 
 		}
 
-		public ACLMessage queryEconomy() {
-			return this.queryEconomyAux("ALL");
+		public StockMapAllMessage queryEconomy() {
+			try {
+				return (StockMapAllMessage) this.queryEconomyAux("ALL").getContentObject();
+			} catch (UnreadableException e) {
+				System.out.print("Failed to get query result");
+				e.printStackTrace();
+				return null;
+			}
 
 		}
 
-		public ACLMessage queryEconomy(AID company) {
-			return queryEconomyAux(company.getName());
+		public StockMapSingleMessage queryEconomy(AID company) {
+			try {
+				return (StockMapSingleMessage) this.queryEconomyAux(company.getName()).getContentObject();
+			} catch (UnreadableException e) {
+				System.out.print("Failed to get query result");
+				e.printStackTrace();
+				return null;
+			}
 		}
 
 		public ACLMessage queryEconomyAux(String content) {

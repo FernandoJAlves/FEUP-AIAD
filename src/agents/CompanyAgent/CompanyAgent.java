@@ -410,7 +410,7 @@ public class CompanyAgent extends Agent {
 
 		// Pick starting value for company stock value, between 10 and 50
 		Double actionValue = ThreadLocalRandom.current().nextDouble(10, 51);
-		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, maxStockAmmount);
+		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, maxStockAmmount, companyCapital);
 		try {
 			msg.setContentObject(content);
 		} catch (IOException e) {

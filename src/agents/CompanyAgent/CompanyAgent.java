@@ -1,6 +1,7 @@
 package agents.CompanyAgent;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import java.io.IOException;
@@ -280,18 +281,13 @@ public class CompanyAgent extends Agent {
 			AID chosenCompany = companyAgents[companyIndex].getName();
 			dealAgent = chosenCompany.getLocalName();
 
-			ACLMessage msg;
+			ACLMessage msg = strategy();
 
-			// TODO: Remove this if/else, only here to prevent errors (simulates a valid
-			// buy)
-			if (getLocalName().equals("company2")) {
-				msg = makeOfferMessage("company1", 3000, 3000, chosenCompany);
-			} else {
-				msg = makeOfferMessage("company2", 3000, 3000, chosenCompany);
+			if (msg != null) {
+				setState(CompanyState.NEGOTIATE);
+				sendCustom(msg);
 			}
 
-			setState(CompanyState.NEGOTIATE);
-			sendCustom(msg);
 		}
 
 		public void negotiate(ACLMessage msg) {
@@ -375,33 +371,60 @@ public class CompanyAgent extends Agent {
 			msg = null;
 		}
 
-		public void strategy() {
+		public ACLMessage strategy() {
 			switch (personality) {
 			case ROOKIE:
-				this.rookieStrategy();
-				break;
+				return this.rookieStrategy();
 			case ADVANCED:
+				// TODO: this
 				this.advancedStrategy();
 				break;
 			default:
-				this.rookieStrategy();
-				break;
+				return this.rookieStrategy();
 			}
+			return null;
 		}
 
-		public void rookieStrategy() {
+		public ACLMessage rookieStrategy() {
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, companyAgents.length);
 
-			queryEconomy(companyAgents[companyIndex].getName());
+			StockMapSingleMessage queryResult = queryEconomy(companyAgents[companyIndex].getName());
 
-			// TODO: parse content
+			ArrayList<String> companies = new ArrayList<String>(queryResult.companyStocks.keySet());
 
-			// return new OfferPair(companyAgents[companyIndex],
-			// makeOfferMessage(companyName, stockCount, value, receiver));
+			int chosenCompany = ThreadLocalRandom.current().nextInt(0, companies.size());
+
+			String companyName = companies.get(chosenCompany);
+			int stockCount = queryResult.companyStocks.get(companyName);
+
+			// Will now pick an offer between 0 and min(stockCount,maxStockAmmount/2), and
+			// if viable (enough capital), make the offer
+
+			boolean viable = false;
+			double maxAmountDouble = maxStockAmmount;
+			int offerStockCount;
+
+			do {
+				int maxStockToBuy = Math.min(stockCount, (int) Math.ceil(maxAmountDouble / 2));
+				offerStockCount = ThreadLocalRandom.current().nextInt(0, maxStockToBuy + 1);
+
+				if (offerStockCount * queryResult.companyOtherInfo.stockValue < companyCapital) {
+					viable = true;
+				}
+
+			} while (!viable);
+
+			AID receiver = getCompanyAID(companyName);
+
+			int offerValue = (int) Math.ceil(offerStockCount * queryResult.companyOtherInfo.stockValue);
+
+			ACLMessage offer = makeOfferMessage(companyName, offerStockCount, offerValue, receiver);
+
+			return offer;
 		}
 
 		public void advancedStrategy() {
-
+			queryEconomy();
 		}
 
 		public StockMapAllMessage queryEconomy() {
@@ -442,7 +465,7 @@ public class CompanyAgent extends Agent {
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {
-		this.setupPersonality();
+		//this.setupPersonality();
 
 		System.out.println("\t> Starting Company: " + getLocalName());
 
@@ -599,5 +622,6 @@ public class CompanyAgent extends Agent {
 			this.personality = CompanyPersonality.ROOKIE;
 			break;
 		}
+		System.out.println(this.personality);
 	}
 }

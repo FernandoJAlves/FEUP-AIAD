@@ -1,3 +1,3 @@
 #!/bin/bash
 
-java -cp lib/jade.jar:lib/commons-codec-1.3.jar:classes launcher.EconomyWarsLauncher
+java -cp lib/jade.jar:lib/commons-codec-1.3.jar:classes launcher.EconomyWarsLauncher "$@"

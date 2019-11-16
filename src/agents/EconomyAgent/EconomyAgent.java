@@ -164,7 +164,7 @@ public class EconomyAgent extends Agent {
 						}
 					}
 
-					// send(reply); // TODO: Uncomment this after the company listener is done
+					send(reply);
 
 					break;
 				}

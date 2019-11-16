@@ -17,20 +17,20 @@ public class EconomyWarsLauncher {
 		profile.setParameter(Profile.MAIN_HOST, "localhost");
 
 		ContainerController mainContainer = rt.createMainContainer(profile);
-		generateAgent(3, mainContainer);
+		generateAgent(args, mainContainer);
 
 	}
 
-	public static void generateAgent(int num, ContainerController container) {
-		Object[] args = new Object[0];
+	public static void generateAgent(String[] args, ContainerController container) {
 
 		createAgent(container, "rma", "jade.tools.rma.rma", args);
 		createAgent(container, "sniffer", "jade.tools.sniffer.Sniffer", args);
 
 		createAgent(container, "eco", "agents.EconomyAgent.EconomyAgent", args);
 
-		for (int i = 0; i < num; i++) {
-			createAgent(container, "company" + i + 1, "agents.CompanyAgent.CompanyAgent", args);
+		for (int i = 0; i < args.length; i++) {
+			Object[] personality = { args[i] };
+			createAgent(container, "company" + (i + 1), "agents.CompanyAgent.CompanyAgent", personality);
 		}
 	}
 

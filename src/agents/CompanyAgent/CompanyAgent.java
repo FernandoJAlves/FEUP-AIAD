@@ -384,8 +384,8 @@ public class CompanyAgent extends Agent {
 				this.advancedStrategy();
 				break;
 			default:
-			this.rookieStrategy();
-			break;
+				this.rookieStrategy();
+				break;
 			}
 		}
 
@@ -394,8 +394,10 @@ public class CompanyAgent extends Agent {
 
 			queryEconomy(companyAgents[companyIndex].getName());
 
-			//
+			// TODO: parse content
 
+			// return new OfferPair(companyAgents[companyIndex],
+			// makeOfferMessage(companyName, stockCount, value, receiver));
 		}
 
 		public void advancedStrategy() {
@@ -428,6 +430,7 @@ public class CompanyAgent extends Agent {
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {
+		this.setupPersonality();
 
 		System.out.println("\t> Starting Company: " + getLocalName());
 
@@ -553,7 +556,7 @@ public class CompanyAgent extends Agent {
 
 	protected AID getCompanyAID(String companyName) {
 		for (int i = 0; i < companyAgents.length; i++) {
-			if(companyAgents[i].getName().getName().equals(companyName)) {
+			if (companyAgents[i].getName().getName().equals(companyName)) {
 				return companyAgents[i].getName();
 			}
 		}
@@ -569,5 +572,20 @@ public class CompanyAgent extends Agent {
 			System.out.println("\t" + keyInner + " - " + companyStocksMap.get(keyInner));
 		}
 		System.out.println("======================");
+	}
+
+	protected void setupPersonality() {
+		String personalityChar = (String) this.getArguments()[0];
+		switch (personalityChar) {
+		case "R":
+			this.personality = CompanyPersonality.ROOKIE;
+			break;
+		case "A":
+			this.personality = CompanyPersonality.ADVANCED;
+			break;
+		default:
+			this.personality = CompanyPersonality.ROOKIE;
+			break;
+		}
 	}
 }

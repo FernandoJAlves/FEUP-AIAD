@@ -397,8 +397,7 @@ public class CompanyAgent extends Agent {
 			String companyName = companies.get(chosenCompany);
 			int stockCount = queryResult.companyStocks.get(companyName);
 
-			// Will now pick an offer between 0 and min(stockCount,maxStockAmmount/2), and
-			// if viable (enough capital), make the offer
+			// Will now pick an offer between 0 and min(stockCount,maxStockAmmount/2), and if viable (enough capital), make the offer
 
 			boolean viable = false;
 			double maxAmountDouble = maxStockAmmount;
@@ -415,6 +414,10 @@ public class CompanyAgent extends Agent {
 			} while (!viable);
 
 			AID receiver = getCompanyAID(companyName);
+
+			// TODO: Continue debug here
+			// System.out.println(" > " + getLocalName() + " | investingIn: " + companyName);
+			// System.out.println(" > " + getLocalName() + " | stockCount: " + offerStockCount + " | receiver: " + receiver);
 
 			int offerValue = (int) Math.ceil(offerStockCount * queryResult.companyOtherInfo.stockValue);
 
@@ -440,7 +443,7 @@ public class CompanyAgent extends Agent {
 
 		public StockMapSingleMessage queryEconomy(AID company) {
 			try {
-				return (StockMapSingleMessage) this.queryEconomyAux(company.getName()).getContentObject();
+				return (StockMapSingleMessage) this.queryEconomyAux(company.getLocalName()).getContentObject();
 			} catch (UnreadableException e) {
 				System.out.print("Failed to get query result");
 				e.printStackTrace();
@@ -591,7 +594,7 @@ public class CompanyAgent extends Agent {
 
 	protected AID getCompanyAID(String companyName) {
 		for (int i = 0; i < companyAgents.length; i++) {
-			if (companyAgents[i].getName().getName().equals(companyName)) {
+			if (companyAgents[i].getName().getLocalName().equals(companyName)) {
 				return companyAgents[i].getName();
 			}
 		}

@@ -133,6 +133,7 @@ public class EconomyAgent extends Agent {
 					break;
 				}
 				case ACLMessage.REQUEST: {
+					// Query to get a company's (or all companies') stock map
 					String content = msg.getContent();
 
 					if (content.equals("ALL")) {
@@ -141,6 +142,22 @@ public class EconomyAgent extends Agent {
 					else {
 						System.out.println("!!!!!! RECEIVED COMPANY: " + content + " !!!!!!");
 					}
+
+					break;
+				}
+				case ACLMessage.CONFIRM: {
+					// Informing the Economy of the change of capital from agents in WORK state
+					WorkNotifyMessage content;
+					try {
+						content = (WorkNotifyMessage) msg.getContentObject();
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+						return;
+					}
+
+					CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(content.workingCompany);
+					currentCompanyInfo.currentCapital = content.newCapitalValue;
+					companyOtherInfoMap.put(content.workingCompany, currentCompanyInfo);
 
 					break;
 				}

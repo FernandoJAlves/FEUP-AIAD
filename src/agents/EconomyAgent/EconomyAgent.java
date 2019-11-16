@@ -16,19 +16,6 @@ import jade.lang.acl.UnreadableException;
 
 import messages.*;
 
-// Auxiliar data for a company
-class CompanyOtherInfo {
-	public Integer currentCapital;
-	public String currentMotherCompany;
-	public Double stockValue;
-
-	public CompanyOtherInfo (Integer currentCapital, String currentMotherCompany, Double stockValue) {
-		this.currentCapital = currentCapital;
-		this.currentMotherCompany = currentMotherCompany;
-		this.stockValue = stockValue;
-	}
-}
-
 public class EconomyAgent extends Agent {
 
 	private static int PRINT_INTERVAL = 2000;
@@ -38,7 +25,6 @@ public class EconomyAgent extends Agent {
 	private static final long serialVersionUID = 1L;
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 
-	private HashMap<String, Double> companyValues = new HashMap<String, Double>(); // individual company stock values
 	private HashMap<String, HashMap<String, Integer>> companyStocksMap = new HashMap<String, HashMap<String, Integer>>(); // stocks location
 	private HashMap<String, CompanyOtherInfo> companyOtherInfoMap = new HashMap<String, CompanyOtherInfo>(); // company capital and mother-company map
 
@@ -66,7 +52,7 @@ public class EconomyAgent extends Agent {
 				companyOtherInfoMap.put(key, currentCompanyInfo);
 
 				if (PRINT_ECONOMY) {
-					System.out.println("NAME: " + key + " | Value: " + currentCompanyInfo.stockValue);
+					System.out.println("NAME: " + key + " | StockValue: " + currentCompanyInfo.stockValue + " | Capital: " + currentCompanyInfo.currentCapital);
 				}
 
 			}
@@ -117,7 +103,7 @@ public class EconomyAgent extends Agent {
 					companyStocksMap.put(content.companyName, currentCompanyStocks);
 
 					// Add entry in companyOtherInfoMap
-					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(0, "", content.companyActionValue); // TODO: Replace 0 for starting capital value (assume a company always starts with no mother-company?)
+					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(content.companyCapital, "", content.companyActionValue); // TODO: Replace 0 for starting capital value (assume a company always starts with no mother-company?)
 					companyOtherInfoMap.put(content.companyName, currentCompanyInfo);
 
 					// TODO: Add a reply? Probably not
@@ -209,5 +195,18 @@ public class EconomyAgent extends Agent {
 
 	protected void createTestCompanies() {
 
+	}
+}
+
+// Auxiliar data for a company
+class CompanyOtherInfo {
+	public Integer currentCapital;
+	public String currentMotherCompany;
+	public Double stockValue;
+
+	public CompanyOtherInfo (Integer currentCapital, String currentMotherCompany, Double stockValue) {
+		this.currentCapital = currentCapital;
+		this.currentMotherCompany = currentMotherCompany;
+		this.stockValue = stockValue;
 	}
 }

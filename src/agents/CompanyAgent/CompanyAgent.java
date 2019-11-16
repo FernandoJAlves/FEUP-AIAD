@@ -21,7 +21,6 @@ import agents.CompanyAgent.CompanyGlobals.*;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.*;
-import utils.*;
 
 public class CompanyAgent extends Agent {
 
@@ -466,23 +465,8 @@ public class CompanyAgent extends Agent {
 			return msg;
 		}
 
-		public boolean shouldStop(){
-			switch(personality){
-				case ROOKIE:
-				return shouldRookieStop();
-				case ADVANCED:
-				return shouldAdvancedStop();
-				default:
-				return shouldRookieStop();
-			}
-		}
-
-		public boolean shouldRookieStop() {
+		public boolean shouldStop() {
 			return companyCapital >= (70000 + (ThreadLocalRandom.current().nextGaussian() * 50000));
-		}
-
-		public boolean shouldAdvancedStop(){
-			return true;
 		}
 	} // END of inner class CompanyBehaviour
 

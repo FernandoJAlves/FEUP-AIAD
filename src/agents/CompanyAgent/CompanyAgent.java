@@ -59,7 +59,7 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void onTick() {
-			// companyStatePrint(); // Used for debug, may be useful in the final version	
+			// companyStatePrint(); // Used for debug, may be useful in the final version
 			ACLMessage msg = this.listen();
 
 			this.updateState(msg);
@@ -133,7 +133,7 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void updateState(ACLMessage msg) {
-			// TODO: Check if these prints can be removed or if Juan needs them			
+			// TODO: Check if these prints can be removed or if Juan needs them
 			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " old state: " +
 			// state);
 			// System.out.println("Agent " + getLocalName() + " old state: " + state);
@@ -145,7 +145,7 @@ public class CompanyAgent extends Agent {
 					if (msg.getPerformative() == ACLMessage.PROPOSE) {
 						StockOffer offer = getOffer(msg);
 						if ((offer != null) && (offer.getTag().equals("BUY"))) {
-							//TODO: Think about the offer
+							// TODO: Think about the offer
 							setState(CompanyState.DEAL);
 							dealAgent = msg.getSender().getLocalName();
 							actualOffer = offer;
@@ -201,11 +201,12 @@ public class CompanyAgent extends Agent {
 						if ((content != null) && (content.indexOf("ACTION") != -1)) {
 							// Decrease capital
 							companyCapital -= actualOffer.getOfferValue();
-							
+
 							// Increase stock (create entry on hashmap if necessary)
 							if (companyStocksMap.containsKey(actualOffer.getCompanyName())) {
 								Integer tempStockAmount = companyStocksMap.get(actualOffer.getCompanyName());
-								companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount + actualOffer.getStockCount());
+								companyStocksMap.put(actualOffer.getCompanyName(),
+										tempStockAmount + actualOffer.getStockCount());
 							} else {
 								companyStocksMap.put(actualOffer.getCompanyName(), actualOffer.getStockCount());
 							}
@@ -236,7 +237,8 @@ public class CompanyAgent extends Agent {
 			// TODO: Warn Economy about the work done
 			// TODO: Remove these prints? Kept for debug for now
 			// System.out.println("Agent " + getLocalName() + " is working");
-			// System.out.println("Agent " + getLocalName() + " capital:" + ++companyCapital);
+			// System.out.println("Agent " + getLocalName() + " capital:" +
+			// ++companyCapital);
 			if (companyCapital >= 10000000) {
 				setState(CompanyState.SEARCH);
 			}
@@ -259,7 +261,8 @@ public class CompanyAgent extends Agent {
 
 			ACLMessage msg;
 
-			// TODO: Remove this if/else, only here to prevent errors (simulates a valid buy)
+			// TODO: Remove this if/else, only here to prevent errors (simulates a valid
+			// buy)
 			if (getLocalName().equals("company2")) {
 				msg = makeOfferMessage("company1", 3000, 3000, chosenCompany);
 			} else {
@@ -302,7 +305,7 @@ public class CompanyAgent extends Agent {
 			// Company accepted proposal and will now notify the 'buyer'
 			// Update local state and notify Economy
 
-			// Increase capital 
+			// Increase capital
 			companyCapital += actualOffer.getOfferValue();
 
 			// Decrease stockMap
@@ -310,14 +313,18 @@ public class CompanyAgent extends Agent {
 				Integer tempStockAmount = companyStocksMap.get(actualOffer.getCompanyName());
 				companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount - actualOffer.getStockCount());
 			} else {
-				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName()); // TODO: after we fix message, this print and if/else can probably be deleted
+				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName()); // TODO: after we fix
+																									// message, this
+																									// print and if/else
+																									// can probably be
+																									// deleted
 			}
-
 
 			// Notify Economy - TODO: Function this (used somewhere else I believe)
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
-	
-			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
+
+			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(),
+					actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
 			try {
 				notifyEconomyMsg.setContentObject(content);
 			} catch (IOException e) {
@@ -327,7 +334,6 @@ public class CompanyAgent extends Agent {
 			notifyEconomyMsg.addReceiver(economyID);
 			sendCustom(notifyEconomyMsg);
 			// End Notify Economy
-
 
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.INFORM);
@@ -349,6 +355,29 @@ public class CompanyAgent extends Agent {
 			reply.setContent("BUSY");
 			sendCustom(reply);
 			msg = null;
+		}
+
+		public void queryEconomy() {
+			this.queryEconomyAux("ALL");
+		}
+
+		public void queryEconomy(AID company) {
+			queryEconomyAux(company.getName());
+
+		}
+
+		public void queryEconomyAux(String content){
+			ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+			request.setContent(content);
+			request.addReceiver(economyID);
+			sendCustom(request);
+			MessageTemplate mt = MessageTemplate.MatchSender(economyID);
+			MessageTemplate tmp = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+			mt = MessageTemplate.and(mt, tmp);
+			ACLMessage msg = null;
+			while (msg == null) {
+				msg = myAgent.receive(mt);
+			}
 		}
 	} // END of inner class CompanyBehaviour
 
@@ -381,7 +410,7 @@ public class CompanyAgent extends Agent {
 		sdEconomy.setType("EconomyAgent");
 		dfdEconomy.addServices(sdEconomy);
 
-		AID tempEconomyID; 
+		AID tempEconomyID;
 		// Search the DF
 		try {
 			DFAgentDescription[] result = DFService.search(this, dfdEconomy);
@@ -410,7 +439,8 @@ public class CompanyAgent extends Agent {
 
 		// Pick starting value for company stock value, between 10 and 50
 		Double actionValue = ThreadLocalRandom.current().nextDouble(10, 51);
-		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, maxStockAmmount, companyCapital);
+		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, maxStockAmmount,
+				companyCapital);
 		try {
 			msg.setContentObject(content);
 		} catch (IOException e) {
@@ -444,13 +474,14 @@ public class CompanyAgent extends Agent {
 	}
 
 	protected void sendCustom(ACLMessage msg) {
-		// System.out.println(" -> " + getLocalName() + " is Sending " + ACLMessage.getPerformative(msg.getPerformative())); TODO: remove this print?
+		// System.out.println(" -> " + getLocalName() + " is Sending " +
+		// ACLMessage.getPerformative(msg.getPerformative())); TODO: remove this print?
 		send(msg);
 	}
 
 	protected ACLMessage makeOfferMessage(String companyName, int stockCount, int value, AID receiver) {
 		ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
-		
+
 		try {
 			StockOffer so = new StockOffer(companyName, stockCount, value);
 			actualOffer = so;

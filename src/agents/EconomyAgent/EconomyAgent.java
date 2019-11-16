@@ -103,10 +103,9 @@ public class EconomyAgent extends Agent {
 					companyStocksMap.put(content.companyName, currentCompanyStocks);
 
 					// Add entry in companyOtherInfoMap
-					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(content.companyCapital, "", content.companyActionValue); // TODO: Replace 0 for starting capital value (assume a company always starts with no mother-company?)
+					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(content.companyCapital, "", content.companyActionValue);
 					companyOtherInfoMap.put(content.companyName, currentCompanyInfo);
 
-					// TODO: Add a reply? Probably not
 					break;
 				}
 				case ACLMessage.PROPAGATE: {
@@ -125,8 +124,8 @@ public class EconomyAgent extends Agent {
 					// Atualizar Mapa Acções
 					updateStockMapAfterTransaction(content);
 
-					// TODO: Atualizar o mapa de capital de cada empresa
-					// TODO: Atualizar o mapa de empresa mãe de cada empresa (e mandar a notificação à stockOwner caso a empresa mãe mude)
+					// Atualizar Mapa de OtherInfo
+					updateOtherInfoMapAfterTransaction(content);
 
 					break;
 				}
@@ -191,6 +190,20 @@ public class EconomyAgent extends Agent {
 		stockOwnerMap.put(content.sellerName, tempStockAmount - content.stockAmount);
 
 		companyStocksMap.put(content.stockOwner, stockOwnerMap);
+	}
+
+	protected void updateOtherInfoMapAfterTransaction (TransactionNotifyMessage content) {
+		// Decrement buyer capital
+		CompanyOtherInfo buyerInfo = companyOtherInfoMap.get(content.buyerName);
+		buyerInfo.currentCapital = buyerInfo.currentCapital - content.transactionCost;
+		companyOtherInfoMap.put(content.buyerName, buyerInfo);
+
+		// Increment seller capital
+		CompanyOtherInfo sellerInfo = companyOtherInfoMap.get(content.sellerName);
+		sellerInfo.currentCapital = sellerInfo.currentCapital + content.transactionCost;
+		companyOtherInfoMap.put(content.sellerName, sellerInfo);
+
+		// TODO: Check if the stockOwner has a new parent-company and send notification
 	}
 
 	protected void createTestCompanies() {

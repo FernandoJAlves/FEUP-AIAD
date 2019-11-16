@@ -16,15 +16,31 @@ import jade.lang.acl.UnreadableException;
 
 import messages.*;
 
+// Auxiliar data for a company
+class CompanyOtherInfo {
+	public Integer currentCapital;
+	public String currentMotherCompany;
+	public Double stockValue;
+
+	public CompanyOtherInfo (Integer currentCapital, String currentMotherCompany, Double stockValue) {
+		this.currentCapital = currentCapital;
+		this.currentMotherCompany = currentMotherCompany;
+		this.stockValue = stockValue;
+	}
+}
+
 public class EconomyAgent extends Agent {
+
+	private static int PRINT_INTERVAL = 2000;
 
 	private static boolean PRINT_ECONOMY = true;
 
 	private static final long serialVersionUID = 1L;
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
 
-	private HashMap<String, Double> companyValues = new HashMap<String, Double>();
-	private HashMap<String, HashMap<String, Integer>> companyStocksMap = new HashMap<String, HashMap<String, Integer>>();
+	private HashMap<String, Double> companyValues = new HashMap<String, Double>(); // individual company stock values
+	private HashMap<String, HashMap<String, Integer>> companyStocksMap = new HashMap<String, HashMap<String, Integer>>(); // stocks location
+	private HashMap<String, CompanyOtherInfo> companyOtherInfoMap = new HashMap<String, CompanyOtherInfo>(); // company capital and mother-company map
 
 	private class EconomyBehaviour extends TickerBehaviour {
 
@@ -41,17 +57,16 @@ public class EconomyAgent extends Agent {
 				System.out.println("============ COMPANY STOCK VALUES ============");
 			}
 
-			for (String key : companyValues.keySet()) {
-				Double currentValue = companyValues.get(key);
-				// Pick next value from a normal distribution with mean=currentValue and
-				// std-deviation=1
+			for (String key : companyOtherInfoMap.keySet()) {
+				CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(key);
+				// Pick next value from a normal distribution with mean=currentValue and std-deviation=1
 				// Min action value is 0.01 (to avoid negative values)
-				Double newValue = Math.max(0.01, (ThreadLocalRandom.current().nextGaussian() * 1 + currentValue));
+				currentCompanyInfo.stockValue = Math.max(0.01, (ThreadLocalRandom.current().nextGaussian() * 1 + currentCompanyInfo.stockValue));
 
-				companyValues.put(key, newValue);
+				companyOtherInfoMap.put(key, currentCompanyInfo);
 
 				if (PRINT_ECONOMY) {
-					System.out.println("KEY: " + key + " | Value: " + newValue);
+					System.out.println("NAME: " + key + " | Value: " + currentCompanyInfo.stockValue);
 				}
 
 			}
@@ -85,6 +100,7 @@ public class EconomyAgent extends Agent {
 			if (msg != null) {
 				switch (msg.getPerformative()) {
 				case ACLMessage.INFORM: {
+					// New company created, add it to the respective maps
 					CompanySetupMessage content;
 					try {
 						content = (CompanySetupMessage) msg.getContentObject();
@@ -93,19 +109,22 @@ public class EconomyAgent extends Agent {
 						return;
 					}
 
-					System.out
-							.println("\t> Inserting <" + content.companyName + "," + content.companyActionValue + ">");
-					companyValues.put(content.companyName, content.companyActionValue);
+					System.out.println("\t> Inserting <" + content.companyName + "," + content.companyActionValue + ">");
 
 					// Build current company stock map (shows where its stocks are located)
 					HashMap<String, Integer> currentCompanyStocks = new HashMap<String, Integer>();
 					currentCompanyStocks.put(content.companyName, content.companyStockAmount);
 					companyStocksMap.put(content.companyName, currentCompanyStocks);
 
-					// TODO: Add a reply?
+					// Add entry in companyOtherInfoMap
+					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(0, "", content.companyActionValue); // TODO: Replace 0 for starting capital value (assume a company always starts with no mother-company?)
+					companyOtherInfoMap.put(content.companyName, currentCompanyInfo);
+
+					// TODO: Add a reply? Probably not
 					break;
 				}
 				case ACLMessage.PROPAGATE: {
+					// A transaction has occured, record it and update the local state
 					TransactionNotifyMessage content;
 					try {
 						content = (TransactionNotifyMessage) msg.getContentObject();
@@ -125,6 +144,7 @@ public class EconomyAgent extends Agent {
 
 					break;
 				}
+				// TODO: Add case for message coming from working companies
 				default:
 					System.out.println("(!) ERROR - UNKNOWN MESSAGE RECEIVED => " + msg.getPerformative() + " | "
 							+ msg.getContent());
@@ -156,7 +176,7 @@ public class EconomyAgent extends Agent {
 		try {
 			myLogger.log(Logger.INFO, "Registering " + getLocalName());
 			DFService.register(this, agentDescription);
-			EconomyBehaviour economyBehaviour = new EconomyBehaviour(this, 2000);
+			EconomyBehaviour economyBehaviour = new EconomyBehaviour(this, PRINT_INTERVAL);
 			ListeningBehaviour listeningBehaviour = new ListeningBehaviour();
 
 			addBehaviour(economyBehaviour);

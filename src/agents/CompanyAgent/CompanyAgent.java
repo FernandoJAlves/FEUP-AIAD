@@ -260,7 +260,7 @@ public class CompanyAgent extends Agent {
 
 			// TODO: Decide if the state should change to SEARCH (depends on the
 			// personality?)
-			if (companyCapital >= 10000000) {
+			if (this.shouldStop()) {
 				setState(CompanyState.SEARCH);
 			}
 
@@ -462,10 +462,29 @@ public class CompanyAgent extends Agent {
 			}
 			return msg;
 		}
+
+		public boolean shouldStop(){
+			switch(personality){
+				case ROOKIE:
+				return shouldRookieStop();
+				case ADVANCED:
+				return shouldAdvancedStop();
+				default:
+				return shouldRookieStop();
+			}
+		}
+
+		public boolean shouldRookieStop() {
+			return companyCapital >= (70000 + (ThreadLocalRandom.current().nextGaussian() * 50000));
+		}
+
+		public boolean shouldAdvancedStop(){
+			return true;
+		}
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {
-		//this.setupPersonality();
+		// this.setupPersonality();
 
 		System.out.println("\t> Starting Company: " + getLocalName());
 

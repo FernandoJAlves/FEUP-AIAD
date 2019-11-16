@@ -337,11 +337,8 @@ public class CompanyAgent extends Agent {
 				Integer tempStockAmount = companyStocksMap.get(actualOffer.getCompanyName());
 				companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount - actualOffer.getStockCount());
 			} else {
-				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName()); // TODO: after we fix
-																									// message, this
-																									// print and if/else
-																									// can probably be
-																									// deleted
+				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName()); 
+				// TODO: after we fix message, this print and if/else can probably be deleted
 			}
 
 

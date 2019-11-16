@@ -205,8 +205,7 @@ public class CompanyAgent extends Agent {
 							// Increase stock (create entry on hashmap if necessary)
 							if (companyStocksMap.containsKey(actualOffer.getCompanyName())) {
 								Integer tempStockAmount = companyStocksMap.get(actualOffer.getCompanyName());
-								companyStocksMap.put(actualOffer.getCompanyName(),
-										tempStockAmount + actualOffer.getStockCount());
+								companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount + actualOffer.getStockCount());
 							} else {
 								companyStocksMap.put(actualOffer.getCompanyName(), actualOffer.getStockCount());
 							}
@@ -345,8 +344,7 @@ public class CompanyAgent extends Agent {
 			// Notify Economy - TODO: Function this? (used somewhere else I believe)
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
 
-			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(),
-					actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
+			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), sactualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
 			try {
 				notifyEconomyMsg.setContentObject(content);
 			} catch (IOException e) {

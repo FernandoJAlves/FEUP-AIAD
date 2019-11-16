@@ -1,7 +1,15 @@
 package utils;
 
+import java.io.Serializable;
+
 // Auxiliar data for a company
-public class CompanyOtherInfo {
+public class CompanyOtherInfo implements Serializable {
+	
+    /**
+     *
+     */
+	private static final long serialVersionUID = 1L;
+	
 	public Integer currentCapital;
 	public String currentMotherCompany;
 	public Double stockValue;

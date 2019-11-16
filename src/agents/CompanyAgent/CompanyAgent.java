@@ -40,6 +40,7 @@ public class CompanyAgent extends Agent {
 	private HashMap<String, Integer> companyStocksMap = new HashMap<String, Integer>();
 
 	private CompanyState state = CompanyState.SEARCH;
+	private CompanyPersonality personality = CompanyPersonality.ROOKIE;
 
 	private String dealAgent = "";
 	private StockOffer actualOffer = null;
@@ -205,7 +206,8 @@ public class CompanyAgent extends Agent {
 							// Increase stock (create entry on hashmap if necessary)
 							if (companyStocksMap.containsKey(actualOffer.getCompanyName())) {
 								Integer tempStockAmount = companyStocksMap.get(actualOffer.getCompanyName());
-								companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount + actualOffer.getStockCount());
+								companyStocksMap.put(actualOffer.getCompanyName(),
+										tempStockAmount + actualOffer.getStockCount());
 							} else {
 								companyStocksMap.put(actualOffer.getCompanyName(), actualOffer.getStockCount());
 							}
@@ -237,7 +239,8 @@ public class CompanyAgent extends Agent {
 			Integer maxCapitalChange = (int) Math.round(companyCapital * 1.03);
 
 			companyCapital = ThreadLocalRandom.current().nextInt(companyCapital, maxCapitalChange);
-			// System.out.println("WORKING: " + companyCapital); // TODO: Remove this print, only for debug
+			// System.out.println("WORKING: " + companyCapital); // TODO: Remove this print,
+			// only for debug
 
 			// Notify Economy - TODO: Function this?
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.CONFIRM);
@@ -253,8 +256,8 @@ public class CompanyAgent extends Agent {
 			sendCustom(notifyEconomyMsg);
 			// End Notify Economy
 
-
-			// TODO: Decide if the state should change to SEARCH (depends on the personality?)
+			// TODO: Decide if the state should change to SEARCH (depends on the
+			// personality?)
 			if (companyCapital >= 10000000) {
 				setState(CompanyState.SEARCH);
 			}
@@ -330,15 +333,15 @@ public class CompanyAgent extends Agent {
 				Integer tempStockAmount = companyStocksMap.get(actualOffer.getCompanyName());
 				companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount - actualOffer.getStockCount());
 			} else {
-				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName()); 
+				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName());
 				// TODO: after we fix message, this print and if/else can probably be deleted
 			}
-
 
 			// Notify Economy - TODO: Function this? (used somewhere else I believe)
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
 
-			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
+			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(),
+					actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
 			try {
 				notifyEconomyMsg.setContentObject(content);
 			} catch (IOException e) {
@@ -371,16 +374,43 @@ public class CompanyAgent extends Agent {
 			msg = null;
 		}
 
-		public void queryEconomy() {
-			this.queryEconomyAux("ALL");
+		public void strategy() {
+			switch (personality) {
+			case ROOKIE:
+				this.rookieStrategy();
+				break;
+			case ADVANCED:
+				this.advancedStrategy();
+				break;
+			default:
+			this.rookieStrategy();
+			break;
+			}
 		}
 
-		public void queryEconomy(AID company) {
-			queryEconomyAux(company.getName());
+		public void rookieStrategy() {
+			int companyIndex = ThreadLocalRandom.current().nextInt(0, companyAgents.length);
+
+			queryEconomy(companyAgents[companyIndex].getName());
+
+			//
 
 		}
 
-		public void queryEconomyAux(String content){
+		public void advancedStrategy() {
+
+		}
+
+		public ACLMessage queryEconomy() {
+			return this.queryEconomyAux("ALL");
+
+		}
+
+		public ACLMessage queryEconomy(AID company) {
+			return queryEconomyAux(company.getName());
+		}
+
+		public ACLMessage queryEconomyAux(String content) {
 			ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
 			request.setContent(content);
 			request.addReceiver(economyID);
@@ -392,6 +422,7 @@ public class CompanyAgent extends Agent {
 			while (msg == null) {
 				msg = myAgent.receive(mt);
 			}
+			return msg;
 		}
 	} // END of inner class CompanyBehaviour
 
@@ -517,6 +548,15 @@ public class CompanyAgent extends Agent {
 			e.printStackTrace();
 		}
 		return so;
+	}
+
+	protected AID getCompanyAID(String companyName) {
+		for (int i = 0; i < companyAgents.length; i++) {
+			if(companyAgents[i].getName().getName().equals(companyName)) {
+				return companyAgents[i].getName();
+			}
+		}
+		return null;
 	}
 
 	protected void companyStatePrint() {

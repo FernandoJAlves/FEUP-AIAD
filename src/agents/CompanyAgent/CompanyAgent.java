@@ -59,7 +59,7 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void onTick() {
-			companyStatePrint(); // Used for debug, may be useful in the final version	
+			// companyStatePrint(); // Used for debug, may be useful in the final version	
 			ACLMessage msg = this.listen();
 
 			this.updateState(msg);
@@ -234,8 +234,9 @@ public class CompanyAgent extends Agent {
 		public void work() {
 			// TODO: Increase Capital
 			// TODO: Warn Economy about the work done
-			System.out.println("Agent " + getLocalName() + " is working");
-			System.out.println("Agent " + getLocalName() + " capital:" + ++companyCapital);
+			// TODO: Remove these prints? Kept for debug for now
+			// System.out.println("Agent " + getLocalName() + " is working");
+			// System.out.println("Agent " + getLocalName() + " capital:" + ++companyCapital);
 			if (companyCapital >= 10000000) {
 				setState(CompanyState.SEARCH);
 			}
@@ -255,7 +256,16 @@ public class CompanyAgent extends Agent {
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, agentsMax);
 			AID chosenCompany = companyAgents[companyIndex].getName();
 			dealAgent = chosenCompany.getLocalName();
-			ACLMessage msg = makeOfferMessage("company2", 3000, 3000, chosenCompany);
+
+			ACLMessage msg;
+
+			// TODO: Remove this if/else, only here to prevent errors (simulates a valid buy)
+			if (getLocalName().equals("company2")) {
+				msg = makeOfferMessage("company1", 3000, 3000, chosenCompany);
+			} else {
+				msg = makeOfferMessage("company2", 3000, 3000, chosenCompany);
+			}
+
 			setState(CompanyState.NEGOTIATE);
 			sendCustom(msg);
 		}
@@ -291,9 +301,6 @@ public class CompanyAgent extends Agent {
 
 			// Company accepted proposal and will now notify the 'buyer'
 			// Update local state and notify Economy
-			
-			// TODO: Mainly here for debug, but may be useful for the final version
-			System.out.println("(!!!) TRANSACTION: " + getLocalName() + " SOLD STOCKS TO ANOTHER COMPANY (!!!)"); 
 
 			// Increase capital 
 			companyCapital += actualOffer.getOfferValue();
@@ -306,8 +313,8 @@ public class CompanyAgent extends Agent {
 				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName()); // TODO: after we fix message, this print and if/else can probably be deleted
 			}
 
-			
-			// Notify Economy
+
+			// Notify Economy - TODO: Function this (used somewhere else I believe)
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
 	
 			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());

@@ -18,7 +18,7 @@ import messages.*;
 
 public class EconomyAgent extends Agent {
 
-	private static boolean PRINT_ECONOMY = false;
+	private static boolean PRINT_ECONOMY = true;
 
 	private static final long serialVersionUID = 1L;
 	private Logger myLogger = Logger.getMyLogger(getClass().getName());
@@ -64,7 +64,7 @@ public class EconomyAgent extends Agent {
 				HashMap<String, Integer> currentCompanyStocks = companyStocksMap.get(keyOuter);
 
 				if (PRINT_ECONOMY) {
-					System.out.println("Company: " + keyOuter + " stocks are in companies: ");
+					System.out.println(keyOuter + " stocks are in companies: ");
 					for (String keyInner : currentCompanyStocks.keySet()) {
 						System.out.println("\t" + keyInner + " - " + currentCompanyStocks.get(keyInner));
 					}
@@ -114,7 +114,14 @@ public class EconomyAgent extends Agent {
 						return;
 					}
 
-					// TODO: Atualizar o mapa de ações (e o eventualmente mapa de capital de cada empresa)
+					// Relevant print
+					System.out.println("\n(!!!) TRANSACTION: " + content.sellerName + " SOLD STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " (!!!)"); 
+
+					// Atualizar Mapa Acções
+					updateStockMapAfterTransaction(content);
+
+					// TODO: Atualizar o mapa de capital de cada empresa
+					// TODO: Atualizar o mapa de empresa mãe de cada empresa (e mandar a notificação à stockOwner caso a empresa mãe mude)
 
 					break;
 				}
@@ -160,6 +167,24 @@ public class EconomyAgent extends Agent {
 		}
 
 		createTestCompanies();
+	}
+
+	protected void updateStockMapAfterTransaction (TransactionNotifyMessage content) {
+		HashMap<String, Integer> stockOwnerMap = companyStocksMap.get(content.stockOwner);
+
+		// Increment Buyer Stocks
+		if (stockOwnerMap.containsKey(content.buyerName)) {
+			Integer tempStockAmount = stockOwnerMap.get(content.buyerName);
+			stockOwnerMap.put(content.buyerName, tempStockAmount + content.stockAmount);
+		} else {
+			stockOwnerMap.put(content.buyerName, content.stockAmount);
+		}
+
+		// Decrement Seller Stocks
+		Integer tempStockAmount = stockOwnerMap.get(content.sellerName);
+		stockOwnerMap.put(content.sellerName, tempStockAmount - content.stockAmount);
+
+		companyStocksMap.put(content.stockOwner, stockOwnerMap);
 	}
 
 	protected void createTestCompanies() {

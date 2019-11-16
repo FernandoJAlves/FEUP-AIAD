@@ -20,6 +20,7 @@ import agents.CompanyAgent.CompanyGlobals.*;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.*;
+import utils.*;
 
 public class CompanyAgent extends Agent {
 

@@ -16,6 +16,7 @@ import jade.domain.FIPAException;
 import jade.lang.acl.UnreadableException;
 
 import messages.*;
+import utils.*;
 
 public class EconomyAgent extends Agent {
 
@@ -240,18 +241,5 @@ public class EconomyAgent extends Agent {
 
 	protected void createTestCompanies() {
 
-	}
-}
-
-// Auxiliar data for a company
-class CompanyOtherInfo {
-	public Integer currentCapital;
-	public String currentMotherCompany;
-	public Double stockValue;
-
-	public CompanyOtherInfo (Integer currentCapital, String currentMotherCompany, Double stockValue) {
-		this.currentCapital = currentCapital;
-		this.currentMotherCompany = currentMotherCompany;
-		this.stockValue = stockValue;
 	}
 }

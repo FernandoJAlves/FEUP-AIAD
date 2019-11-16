@@ -22,11 +22,11 @@ public class EconomyWarsLauncher {
 	}
 
 	public static void generateAgent(String[] args, ContainerController container) {
+		Object[] objs = new Object[0];
+		createAgent(container, "rma", "jade.tools.rma.rma", objs);
+		createAgent(container, "sniffer", "jade.tools.sniffer.Sniffer", objs);
 
-		createAgent(container, "rma", "jade.tools.rma.rma", args);
-		createAgent(container, "sniffer", "jade.tools.sniffer.Sniffer", args);
-
-		createAgent(container, "eco", "agents.EconomyAgent.EconomyAgent", args);
+		createAgent(container, "eco", "agents.EconomyAgent.EconomyAgent", objs);
 
 		for (int i = 0; i < args.length; i++) {
 			Object[] personality = { args[i] };

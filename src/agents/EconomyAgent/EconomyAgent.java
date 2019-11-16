@@ -3,6 +3,7 @@ package agents.EconomyAgent;
 import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.text.DecimalFormat;
+import java.io.IOException;
 
 import jade.core.*;
 import jade.core.behaviours.*;
@@ -86,7 +87,6 @@ public class EconomyAgent extends Agent {
 
 		public void action() {
 			ACLMessage msg = receive();
-			// TODO: Handle other messages
 			if (msg != null) {
 				switch (msg.getPerformative()) {
 				case ACLMessage.INFORM: {
@@ -137,12 +137,34 @@ public class EconomyAgent extends Agent {
 					// Query to get a company's (or all companies') stock map
 					String content = msg.getContent();
 
+					ACLMessage reply = msg.createReply();
+					reply.setPerformative(ACLMessage.INFORM);
+
 					if (content.equals("ALL")) {
-						System.out.println("!!!!!! RECEIVED ALL !!!!!!");
+
+						StockMapAllMessage replyContent = new StockMapAllMessage(companyStocksMap, companyOtherInfoMap);
+						try {
+							reply.setContentObject(replyContent);
+						} catch (IOException e) {
+							e.printStackTrace();
+							return;
+						}
 					}
 					else {
-						System.out.println("!!!!!! RECEIVED COMPANY: " + content + " !!!!!!");
+						
+						HashMap<String, Integer> currentCompanyStocks = companyStocksMap.get(content);
+						CompanyOtherInfo currentCompanyOtherInfo = companyOtherInfoMap.get(content);
+
+						StockMapSingleMessage replyContent = new StockMapSingleMessage(currentCompanyStocks, currentCompanyOtherInfo);
+						try {
+							reply.setContentObject(replyContent);
+						} catch (IOException e) {
+							e.printStackTrace();
+							return;
+						}
 					}
+
+					// send(reply); // TODO: Uncomment this after the company listener is done
 
 					break;
 				}
@@ -162,7 +184,6 @@ public class EconomyAgent extends Agent {
 
 					break;
 				}
-				// TODO: Add case for message coming from working companies
 				default:
 					System.out.println("(!) ERROR - UNKNOWN MESSAGE RECEIVED => " + msg.getPerformative() + " | "
 							+ msg.getContent());

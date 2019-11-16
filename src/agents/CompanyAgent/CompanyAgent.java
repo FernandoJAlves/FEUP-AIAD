@@ -235,10 +235,7 @@ public class CompanyAgent extends Agent {
 			// TODO: Warn Economy about the work done
 
 			// While working, a company's capital increases between 0% and 3%
-
-			Integer maxCapitalChange = companyCapital * 1.03;
-			System.out.println("> companyCapital: " + companyCapital);
-			System.out.println("> maxCapitalChange: " + maxCapitalChange);
+			Integer maxCapitalChange = (int) Math.round(companyCapital * 1.03);
 
 			companyCapital = ThreadLocalRandom.current().nextInt(companyCapital, maxCapitalChange);
 
@@ -344,7 +341,7 @@ public class CompanyAgent extends Agent {
 			// Notify Economy - TODO: Function this? (used somewhere else I believe)
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
 
-			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), sactualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
+			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
 			try {
 				notifyEconomyMsg.setContentObject(content);
 			} catch (IOException e) {

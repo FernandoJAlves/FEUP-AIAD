@@ -132,6 +132,18 @@ public class EconomyAgent extends Agent {
 
 					break;
 				}
+				case ACLMessage.REQUEST: {
+					String content = msg.getContent();
+
+					if (content.equals("ALL")) {
+						System.out.println("!!!!!! RECEIVED ALL !!!!!!");
+					}
+					else {
+						System.out.println("!!!!!! RECEIVED COMPANY: " + content + " !!!!!!");
+					}
+
+					break;
+				}
 				// TODO: Add case for message coming from working companies
 				default:
 					System.out.println("(!) ERROR - UNKNOWN MESSAGE RECEIVED => " + msg.getPerformative() + " | "

@@ -21,7 +21,7 @@ import utils.*;
 
 public class EconomyAgent extends Agent {
 
-	private static int PRINT_INTERVAL = 2000;
+	private static int PRINT_INTERVAL = 3000;
 
 	private static boolean PRINT_ECONOMY = true;
 
@@ -33,6 +33,9 @@ public class EconomyAgent extends Agent {
 
 	private static DecimalFormat formatter = new DecimalFormat("#.000");
 
+	// Maximum number of stocks of 1 company
+	private static Integer maxStockAmmount = 10000;
+
 	private class EconomyBehaviour extends TickerBehaviour {
 
 		private static final long serialVersionUID = 1L;
@@ -42,6 +45,8 @@ public class EconomyAgent extends Agent {
 		}
 
 		public void onTick() {
+
+			calculateCurrentParents();
 
 			if (PRINT_ECONOMY) {
 				System.out.println("\n///////////////////////////////////////////////////////////////\n");
@@ -107,7 +112,7 @@ public class EconomyAgent extends Agent {
 					companyStocksMap.put(content.companyName, currentCompanyStocks);
 
 					// Add entry in companyOtherInfoMap
-					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(content.companyCapital, "", content.companyActionValue);
+					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(content.companyCapital, null, content.companyActionValue);
 					companyOtherInfoMap.put(content.companyName, currentCompanyInfo);
 
 					break;
@@ -261,6 +266,57 @@ public class EconomyAgent extends Agent {
 	}
 
 	protected void createTestCompanies() {
+
+	}
+
+	protected void calculateCurrentParents () {
+		
+		HashMap<String, String> companyParentMap = new HashMap<String, String>(); // temporary parent-company map
+
+		for (String currentCompany : companyStocksMap.keySet()) {
+			HashMap<String, Integer> currentCompanyStockMap = companyStocksMap.get(currentCompany);
+
+			for (String currentStockOwner : currentCompanyStockMap.keySet()) {
+				// if a company (different from the currentCompany) has more than 5000 stocks, add entry to companyParentMap
+				if ( currentCompanyStockMap.get(currentStockOwner) > (maxStockAmmount/2) && !(currentCompany.equals(currentStockOwner)) ) {
+					companyParentMap.put(currentCompany, currentStockOwner);
+					break;
+				}
+			}
+		}
+
+		// Calcular "precedências"
+		boolean valuesChanged = false;
+
+		do {
+			for (String currentCompany : companyParentMap.keySet()) {
+				String currentCompanyParent = companyParentMap.get(currentCompany);
+	
+				// Se o pai atual já tiver um "super-pai", então esse "super-pai" torna-se pai para company atual
+				String potentialNewParent = companyParentMap.get(currentCompanyParent);
+				if (potentialNewParent != null) {
+					valuesChanged = true;
+					companyParentMap.put(currentCompany, potentialNewParent);
+				}
+			}
+		} while (valuesChanged);
+
+		// Reset the parents and total company value
+		for (String key : companyOtherInfoMap.keySet()) {
+			CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(key);
+			
+			currentCompanyInfo.currentCompanyValue = null;
+
+			String companyParent = companyParentMap.get(key);
+			if (companyParent == null) {
+				currentCompanyInfo.currentMotherCompany = null;
+			} else {
+				currentCompanyInfo.currentMotherCompany = companyParent;
+				// TODO: Add value to companyParent's total company value?
+			}
+			
+			companyOtherInfoMap.put(key, currentCompanyInfo);
+		}
 
 	}
 }

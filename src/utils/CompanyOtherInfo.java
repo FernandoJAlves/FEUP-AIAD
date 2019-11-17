@@ -13,6 +13,7 @@ public class CompanyOtherInfo implements Serializable {
 	public Integer currentCapital;
 	public String currentMotherCompany;
 	public Double stockValue;
+	public Double currentCompanyValue; // calculated by EconomyAgent
 
 	public CompanyOtherInfo (Integer currentCapital, String currentMotherCompany, Double stockValue) {
 		this.currentCapital = currentCapital;

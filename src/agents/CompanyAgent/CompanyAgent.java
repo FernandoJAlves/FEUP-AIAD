@@ -240,8 +240,6 @@ public class CompanyAgent extends Agent {
 			Integer maxCapitalChange = (int) Math.round(companyCapital * 1.03);
 
 			companyCapital = ThreadLocalRandom.current().nextInt(companyCapital, maxCapitalChange);
-			// System.out.println("WORKING: " + companyCapital); // TODO: Remove this print,
-			// only for debug
 
 			// Notify Economy - TODO: Function this?
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.CONFIRM);
@@ -539,8 +537,7 @@ public class CompanyAgent extends Agent {
 
 		// Pick starting value for company stock value, between 10 and 50
 		Double actionValue = ThreadLocalRandom.current().nextDouble(10, 51);
-		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, maxStockAmmount,
-				companyCapital);
+		CompanySetupMessage content = new CompanySetupMessage(getLocalName(), actionValue, maxStockAmmount, companyCapital, this.personality);
 		try {
 			msg.setContentObject(content);
 		} catch (IOException e) {

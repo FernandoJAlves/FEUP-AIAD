@@ -147,7 +147,10 @@ public class CompanyAgent extends Agent {
 					if (msg.getPerformative() == ACLMessage.PROPOSE) {
 						StockOffer offer = getOffer(msg);
 						if ((offer != null) && (offer.getTag().equals("BUY"))) {
-							// TODO: Think about the offer
+							if (this.shouldReject(offer)) {
+								this.customRejectProposals(msg, "REFUSED");
+								return;
+							}
 							setState(CompanyState.DEAL);
 							dealAgent = msg.getSender().getLocalName();
 							actualOffer = offer;
@@ -360,9 +363,14 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void rejectProposals(ACLMessage msg) {
+			this.customRejectProposals(msg, "BUSY");
+		}
+
+
+		public void customRejectProposals(ACLMessage msg, String content) {
 			ACLMessage reply = msg.createReply();
 			reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
-			reply.setContent("BUSY");
+			reply.setContent(content);
 			sendCustom(reply);
 			msg = null;
 		}
@@ -475,6 +483,20 @@ public class CompanyAgent extends Agent {
 
 		public boolean shouldStop() {
 			return companyCapital >= (70000 + (ThreadLocalRandom.current().nextGaussian() * 50000));
+		}
+
+		public boolean shouldReject(StockOffer offer) {
+
+
+			if (companyStocksMap.get(offer.getCompanyName()) == null){
+				return true;
+			}
+
+			if (offer.getStockCount() > companyStocksMap.get(offer.getCompanyName())){
+				return true;
+			}
+
+			return false;
 		}
 	} // END of inner class CompanyBehaviour
 

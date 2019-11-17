@@ -135,10 +135,6 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void updateState(ACLMessage msg) {
-			// TODO: Check if these prints can be removed or if Juan needs them
-			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " old state: " +
-			// state);
-			// System.out.println("Agent " + getLocalName() + " old state: " + state);
 
 			if (msg != null) {
 
@@ -254,11 +250,7 @@ public class CompanyAgent extends Agent {
 			sendCustom(notifyEconomyMsg);
 			// End Notify Economy
 
-			// TODO: Revert these prints when done
-			System.out.println(getLocalName() + " is in WORK");
-
 			if (this.shouldStop()) {
-				System.out.println(getLocalName() + " left WORK to SEARCH");
 				setState(CompanyState.SEARCH);
 			}
 
@@ -402,13 +394,11 @@ public class CompanyAgent extends Agent {
 			do {
 				int chosenCompany = ThreadLocalRandom.current().nextInt(0, companies.size());
 				companyToContact = companies.get(chosenCompany);
-				// TODO: Handle extreme edge case that leads to this being an infinite loop (especially if the rookie can rebuy its stocks)
 			} while (companyToContact.equals(getLocalName()));
 
 			int stockCount = queryResult.companyStocks.get(companyToContact);
 
-			// TODO: Ajust these values for more interesting results
-			// Will now pick an offer between 0.5 (min(stockCount,maxStockAmmount/2)) and min(stockCount,maxStockAmmount/2), and if viable (enough capital), make the offer
+			// Will now pick an offer between 0.5 (min(stockCount,maximumStockToAsk)) and min(stockCount,maximumStockToAsk), and if viable (enough capital), make the offer
 			boolean viable = false;
 
 			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/(queryResult.companyOtherInfo.stockValue));
@@ -426,10 +416,6 @@ public class CompanyAgent extends Agent {
 			} while (!viable);
 
 			AID receiver = getCompanyAID(companyToContact);
-
-			// TODO: If everything ok, remove these prints
-			// System.out.println(" > " + getLocalName() + " | investingIn: " + companyToInvest.getName());
-			// System.out.println(" > " + getLocalName() + " | stockCount: " + offerStockCount + " | receiver: " + receiver);
 
 			int offerValue = (int) Math.ceil(offerStockCount * queryResult.companyOtherInfo.stockValue);
 
@@ -508,8 +494,6 @@ public class CompanyAgent extends Agent {
 			
 			// Find the company with the highest amount of stocks of that company (that isn't this company)
 			HashMap<String, Integer> companyInvestingInStockMap = queryResult.companyStocksMap.get(chosenLowestCompany);
-
-			// System.out.println("Investing map: " + companyInvestingInStockMap); TODO: remove this when done
 
 			if (companyInvestingInStockMap == null) return null;
 
@@ -629,7 +613,6 @@ public class CompanyAgent extends Agent {
 			StockMapSingleMessage queryResult = queryEconomy(getAID());
 			Double currentStockValue = queryResult.companyOtherInfo.stockValue;
 
-			// TODO: Ajust this?
 			if (currentStockValue < 15.0) {
 				setState(CompanyState.WORK);
 			}
@@ -756,8 +739,6 @@ public class CompanyAgent extends Agent {
 	}
 
 	protected void sendCustom(ACLMessage msg) {
-		// System.out.println(" -> " + getLocalName() + " is Sending " +
-		// ACLMessage.getPerformative(msg.getPerformative())); TODO: remove this print?
 		send(msg);
 	}
 

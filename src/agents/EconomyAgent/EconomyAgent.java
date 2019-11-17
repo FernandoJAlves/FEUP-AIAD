@@ -203,8 +203,6 @@ public class EconomyAgent extends Agent {
 			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
 			doDelete();
 		}
-
-		createTestCompanies();
 	}
 
 	protected void updateStockMapAfterTransaction (TransactionNotifyMessage content) {
@@ -235,12 +233,6 @@ public class EconomyAgent extends Agent {
 		CompanyOtherInfo sellerInfo = companyOtherInfoMap.get(content.sellerName);
 		sellerInfo.currentCapital = sellerInfo.currentCapital + content.transactionCost;
 		companyOtherInfoMap.put(content.sellerName, sellerInfo);
-
-		// TODO: Check if the stockOwner has a new parent-company and send notification
-	}
-
-	protected void createTestCompanies() {
-
 	}
 
 	protected void calculateCurrentParents () {

@@ -263,6 +263,8 @@ public class EconomyAgent extends Agent {
 		boolean valuesChanged = false;
 
 		do {
+			valuesChanged = false;
+			
 			for (String currentCompany : companyParentMap.keySet()) {
 				String currentCompanyParent = companyParentMap.get(currentCompany);
 	

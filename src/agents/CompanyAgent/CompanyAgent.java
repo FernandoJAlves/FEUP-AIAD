@@ -403,11 +403,12 @@ public class CompanyAgent extends Agent {
 			// TODO: Ajust these values for more interesting results
 			// Will now pick an offer between 0.5 (min(stockCount,maxStockAmmount/2)) and min(stockCount,maxStockAmmount/2), and if viable (enough capital), make the offer
 			boolean viable = false;
-			double maxAmountDouble = maxStockAmmount;
+
+			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/(queryResult.companyOtherInfo.stockValue));
 			int offerStockCount;
 
 			do {
-				int maxStockToBuy = Math.min(stockCount, (int) Math.ceil(maxAmountDouble / 2));
+				int maxStockToBuy = Math.min(stockCount, maximumStockToAsk);
 				int minStockToBuy = (int) Math.floor(0.5 * (double) maxStockToBuy);
 				offerStockCount = ThreadLocalRandom.current().nextInt(minStockToBuy, maxStockToBuy + 1);
 

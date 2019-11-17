@@ -611,7 +611,7 @@ public class CompanyAgent extends Agent {
 					break;
 			}
 		}
-		
+
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {

@@ -229,20 +229,16 @@ public class CompanyAgent extends Agent {
 					break;
 				}
 			}
-			// TODO: Check if these prints can be removed or if Juan needs them
-			// System.out.println("Agent " + getLocalName() + " new state: " + state);
-			// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " new state: " +
-			// state);
 		}
 
 		public void work() {
 
-			// While working, a company's capital increases between 0% and 3%
-			Integer maxCapitalChange = (int) Math.round(companyCapital * 1.03);
+			// While working, a company's capital increases between 0% and 20%
+			Integer maxCapitalChange = (int) Math.round(companyCapital * 1.20);
 
 			companyCapital = ThreadLocalRandom.current().nextInt(companyCapital, maxCapitalChange);
 
-			// Notify Economy - TODO: Function this?
+			// Notify Economy 
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.CONFIRM);
 
 			WorkNotifyMessage content = new WorkNotifyMessage(getLocalName(), companyCapital);
@@ -333,7 +329,7 @@ public class CompanyAgent extends Agent {
 				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName());
 			}
 
-			// Notify Economy - TODO: Function this? (used somewhere else I believe)
+			// Notify Economy
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
 
 			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(),
@@ -383,8 +379,6 @@ public class CompanyAgent extends Agent {
 		}
 
 		public ACLMessage rookieStrategy() {
-			
-			// TODO: Maybe rookie wont be able to rebuy his stocks? Either that or add extra logic with getCompaniesWithSelf()
 
 			// Choose a company to invest
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, companyAgents.length);
@@ -406,14 +400,15 @@ public class CompanyAgent extends Agent {
 			int stockCount = queryResult.companyStocks.get(companyToContact);
 
 			// TODO: Ajust these values for more interesting results
-			// Will now pick an offer between 0 and min(stockCount,maxStockAmmount/2), and if viable (enough capital), make the offer
+			// Will now pick an offer between 0.5 (min(stockCount,maxStockAmmount/2)) and min(stockCount,maxStockAmmount/2), and if viable (enough capital), make the offer
 			boolean viable = false;
 			double maxAmountDouble = maxStockAmmount;
 			int offerStockCount;
 
 			do {
 				int maxStockToBuy = Math.min(stockCount, (int) Math.ceil(maxAmountDouble / 2));
-				offerStockCount = ThreadLocalRandom.current().nextInt(0, maxStockToBuy + 1);
+				int minStockToBuy = (int) Math.floor(0.5 * (double) maxStockToBuy);
+				offerStockCount = ThreadLocalRandom.current().nextInt(minStockToBuy, maxStockToBuy + 1);
 
 				if (offerStockCount * queryResult.companyOtherInfo.stockValue < companyCapital) {
 					viable = true;
@@ -589,6 +584,34 @@ public class CompanyAgent extends Agent {
 
 			return false;
 		}
+
+
+		protected void shouldGoToWork() {
+			if (companyCapital < 20000) {
+				setState(CompanyState.WORK);			
+				return;
+			}
+
+			StockMapSingleMessage queryResult = queryEconomy(getAID());
+			Double currentStockValue = queryResult.companyOtherInfo.stockValue;
+
+			// TODO: Ajust this?
+			if (currentStockValue < 15.0) {
+				setState(CompanyState.WORK);
+			}
+			
+			switch (personality) {
+				case ROOKIE:
+					setState(CompanyState.WORK);
+					break;
+				case ADVANCED:
+					setState(CompanyState.SEARCH);
+					break;
+				default:
+					break;
+			}
+		}
+		
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {
@@ -766,21 +789,4 @@ public class CompanyAgent extends Agent {
 		System.out.println(this.personality);
 	}
 
-	protected void shouldGoToWork() {
-		if (companyCapital < 20000) {
-			setState(CompanyState.WORK);			
-			return;
-		}
-		
-		switch (personality) {
-			case ROOKIE:
-				setState(CompanyState.WORK);
-				break;
-			case ADVANCED:
-				setState(CompanyState.SEARCH);
-				break;
-			default:
-				break;
-		}
-	}
 }

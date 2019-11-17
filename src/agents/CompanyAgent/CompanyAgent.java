@@ -41,7 +41,7 @@ public class CompanyAgent extends Agent {
 	// Map of the currently owned stocks (of any company)
 	private HashMap<String, Integer> companyStocksMap = new HashMap<String, Integer>();
 
-	private CompanyState state = CompanyState.SEARCH;
+	private CompanyState state = CompanyState.WORK;
 	private CompanyPersonality personality = CompanyPersonality.ROOKIE;
 
 	private String dealAgent = "";
@@ -259,20 +259,13 @@ public class CompanyAgent extends Agent {
 			sendCustom(notifyEconomyMsg);
 			// End Notify Economy
 
-			// TODO: Decide if the state should change to SEARCH (depends on the
-			// personality?)
-			
-			// TODO: Revert this when done
-			// if ((getLocalName()).equals("company4")) {
-			// 	System.out.println(getLocalName() + " is in WORK");
-			// }
+			// TODO: Revert these prints when done
+			System.out.println(getLocalName() + " is in WORK");
 
-			// if (this.shouldStop()) {
-			// 	if ((getLocalName()).equals("company4")) {
-			// 		System.out.println(getLocalName() + " left WORK to SEARCH");
-			// 	}
-			// 	setState(CompanyState.SEARCH);
-			// }
+			if (this.shouldStop()) {
+				System.out.println(getLocalName() + " left WORK to SEARCH");
+				setState(CompanyState.SEARCH);
+			}
 
 			return;
 		}
@@ -526,10 +519,12 @@ public class CompanyAgent extends Agent {
 
 			if (maximumStockOwner == null) return null;
 
-			// TODO: Fix offer creation
-			Integer stockWanted = Math.min(maxStockAmmount/2, 0);
+			// Calculate ideal amount of stocks to buy
+			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/lowestCompanyValue);
+			Integer stockWanted = Math.min(maximumStockToAsk, Math.min((maxStockAmmount/2 + 1), maximumStockAmount));
+			Integer offerCost = (int) Math.round(stockWanted*lowestCompanyValue);
 
-			return makeOfferMessage(lowestCompanyName, 5001, 20000, getCompanyAID(maximumStockOwner));
+			return makeOfferMessage(lowestCompanyName, stockWanted, offerCost, getCompanyAID(maximumStockOwner));
 		}
 
 		public StockMapAllMessage queryEconomy() {
@@ -779,6 +774,11 @@ public class CompanyAgent extends Agent {
 	}
 
 	protected void shouldGoToWork() {
+		if (companyCapital < 20000) {
+			setState(CompanyState.WORK);			
+			return;
+		}
+		
 		switch (personality) {
 			case ROOKIE:
 				setState(CompanyState.WORK);

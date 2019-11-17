@@ -3,6 +3,7 @@ package agents.CompanyAgent;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 import java.io.IOException;
 
@@ -432,13 +433,13 @@ public class CompanyAgent extends Agent {
 		public ACLMessage advancedStrategy() {
 			
 			// Get all companies
-			// Find parent company
-			// Pick the company with the lowest stock value that isn't owned by this company (or its parent?) Maybe add more that just the lowest?
-			// Find the company with the highest amount of stocks of that company (that isn't this company)
-			// Create an offer that gets either the min(stockAmount, 10000/2 + 1)
-
-			// Get all companies
 			StockMapAllMessage queryResult = queryEconomy();
+			Integer numberOfCompanies = queryResult.companyOtherInfoMap.size();	
+			// Inspect 40% of available companies		
+			Integer numberOfSelectedCompanies = (int) Math.ceil(0.4 * (double) numberOfCompanies);
+
+			ArrayList<String> lowestCompanyList = new ArrayList<String>(Collections.nCopies(numberOfSelectedCompanies, null));
+			ArrayList<Double> lowestCompanyValueList = new ArrayList<Double>(Collections.nCopies(numberOfSelectedCompanies, 100000.0));
 
 			// Find parent company
 			String localParentCompany = queryResult.companyOtherInfoMap.get(getLocalName()) == null
@@ -449,33 +450,58 @@ public class CompanyAgent extends Agent {
 				localParentCompany = ""; 
 
 			// Pick the company with the lowest stock value that isn't owned by this company or its parent
-			String lowestCompanyName = null;
-			Double lowestCompanyValue = 100000.0; // Starting with a really high value
 
-			for (String currentCompany : queryResult.companyOtherInfoMap.keySet()) {
-				CompanyOtherInfo currentCompanyInfo = queryResult.companyOtherInfoMap.get(currentCompany);
+			for (int index = 0; index < numberOfSelectedCompanies; index++) {
+				String lowestCompanyName = null;
+				Double lowestCompanyValue = 100000.0; // Starting with a really high value
 
-				// If the currentCompany is already owned by this company or its parent, continue
-				if (localParentCompany.equals(currentCompanyInfo.currentParentCompany) 
-					|| (getLocalName()).equals(currentCompanyInfo.currentParentCompany)) {
-					continue;
-				} 
+				for (String currentCompany : queryResult.companyOtherInfoMap.keySet()) {
+					CompanyOtherInfo currentCompanyInfo = queryResult.companyOtherInfoMap.get(currentCompany);
+	
+					// Ignores values already added to list
+					if (lowestCompanyList.contains(currentCompany)) {
+						continue;
+					}
 
-				// If the localCompany has all its stocks, don't invest in itself
-				if (currentCompany.equals(getLocalName()) && companyStocksMap.get(getLocalName()) == maxStockAmmount) {
-					continue;
+					// If the currentCompany is already owned by this company or its parent, continue
+					if (localParentCompany.equals(currentCompanyInfo.currentParentCompany) 
+						|| (getLocalName()).equals(currentCompanyInfo.currentParentCompany)) {
+						continue;
+					} 
+	
+					// If the localCompany has all its stocks, don't invest in itself
+					if (currentCompany.equals(getLocalName()) && companyStocksMap.get(getLocalName()) == maxStockAmmount) {
+						continue;
+					}
+	
+					if (currentCompanyInfo.stockValue < lowestCompanyValue) {
+						lowestCompanyName = currentCompany;
+						lowestCompanyValue = currentCompanyInfo.stockValue;
+					}
 				}
 
-				if (currentCompanyInfo.stockValue < lowestCompanyValue) {
-					lowestCompanyName = currentCompany;
-					lowestCompanyValue = currentCompanyInfo.stockValue;
-				}
+				// No more viable investments
+				if (lowestCompanyName == null) {
+					numberOfSelectedCompanies = index;
+					break;
+				}  
+
+				lowestCompanyList.set(index, lowestCompanyName);
+				lowestCompanyValueList.set(index, lowestCompanyValue);
 			}
+
+			// Avoid error in nextInt()
+			if (numberOfSelectedCompanies == 0) return null;
+
+			// Choose a company randomly
+			Integer chosenIndex = ThreadLocalRandom.current().nextInt(0, numberOfSelectedCompanies);
+			String chosenLowestCompany = lowestCompanyList.get(chosenIndex);
+			Double chosenLowestValue = lowestCompanyValueList.get(chosenIndex);
 			
 			// Find the company with the highest amount of stocks of that company (that isn't this company)
-			HashMap<String, Integer> companyInvestingInStockMap = queryResult.companyStocksMap.get(lowestCompanyName);
+			HashMap<String, Integer> companyInvestingInStockMap = queryResult.companyStocksMap.get(chosenLowestCompany);
 
-			System.out.println("Investing map: " + companyInvestingInStockMap);
+			// System.out.println("Investing map: " + companyInvestingInStockMap); TODO: remove this when done
 
 			if (companyInvestingInStockMap == null) return null;
 
@@ -508,11 +534,11 @@ public class CompanyAgent extends Agent {
 			if (maximumStockOwner == null) return null;
 
 			// Calculate ideal amount of stocks to buy
-			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/lowestCompanyValue);
+			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/chosenLowestValue);
 			Integer stockWanted = Math.min(maximumStockToAsk, Math.min((maxStockAmmount/2 + 1), maximumStockAmount));
-			Integer offerCost = (int) Math.round(stockWanted*lowestCompanyValue);
+			Integer offerCost = (int) Math.round(stockWanted*chosenLowestValue);
 
-			return makeOfferMessage(lowestCompanyName, stockWanted, offerCost, getCompanyAID(maximumStockOwner));
+			return makeOfferMessage(chosenLowestCompany, stockWanted, offerCost, getCompanyAID(maximumStockOwner));
 		}
 
 		public StockMapAllMessage queryEconomy() {

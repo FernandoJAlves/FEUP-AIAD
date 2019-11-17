@@ -62,7 +62,7 @@ public class EconomyAgent extends Agent {
 				companyOtherInfoMap.put(key, currentCompanyInfo);
 
 				if (PRINT_ECONOMY) {
-					System.out.println("NAME: " + key + " | StockValue: " + formatter.format(currentCompanyInfo.stockValue) + " | Capital: " + currentCompanyInfo.currentCapital + " | Parent: " + currentCompanyInfo.currentMotherCompany);
+					System.out.println("NAME: " + key + " | Type: " + currentCompanyInfo.personality +  " | StockValue: " + formatter.format(currentCompanyInfo.stockValue) + " | Capital: " + currentCompanyInfo.currentCapital + " | Parent: " + currentCompanyInfo.currentMotherCompany);
 				}
 
 			}
@@ -112,7 +112,7 @@ public class EconomyAgent extends Agent {
 					companyStocksMap.put(content.companyName, currentCompanyStocks);
 
 					// Add entry in companyOtherInfoMap
-					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(content.companyCapital, null, content.companyActionValue);
+					CompanyOtherInfo currentCompanyInfo = new CompanyOtherInfo(content.companyCapital, null, content.companyActionValue, content.personality);
 					companyOtherInfoMap.put(content.companyName, currentCompanyInfo);
 
 					break;
@@ -128,7 +128,7 @@ public class EconomyAgent extends Agent {
 					}
 
 					// Relevant print
-					System.out.println("\n(!!!) TRANSACTION: " + content.sellerName + " SOLD STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " (!!!)"); 
+					System.out.println("\n >>>> (!!!) TRANSACTION: " + content.sellerName + " SOLD " + content.stockAmount + " STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " FOR " + content.transactionCost + "$ (!!!)"); 
 
 					// Atualizar Mapa Acções
 					updateStockMapAfterTransaction(content);

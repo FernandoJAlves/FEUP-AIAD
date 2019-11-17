@@ -30,6 +30,7 @@ public class EconomyAgent extends Agent {
 
 	private HashMap<String, HashMap<String, Integer>> companyStocksMap = new HashMap<String, HashMap<String, Integer>>(); // stocks location
 	private HashMap<String, CompanyOtherInfo> companyOtherInfoMap = new HashMap<String, CompanyOtherInfo>(); // company capital and mother-company map
+	private HashMap<String, Double> rankingMap = new HashMap<String, Double>();
 
 	private static DecimalFormat formatter = new DecimalFormat("#.000");
 
@@ -48,39 +49,9 @@ public class EconomyAgent extends Agent {
 
 			calculateCurrentParents();
 
-			if (PRINT_ECONOMY) {
-				System.out.println("\n///////////////////////////////////////////////////////////////\n");
-				System.out.println("============ COMPANY STOCK VALUES ============");
-			}
-
-			for (String key : companyOtherInfoMap.keySet()) {
-				CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(key);
-				// Pick next value from a normal distribution with mean=currentValue and std-deviation=1
-				// Min action value is 0.01 (to avoid negative values)
-				currentCompanyInfo.stockValue = Math.max(0.01, (ThreadLocalRandom.current().nextGaussian() * 1 + currentCompanyInfo.stockValue));
-
-				companyOtherInfoMap.put(key, currentCompanyInfo);
-
-				if (PRINT_ECONOMY) {
-					System.out.println("NAME: " + key + " | Type: " + currentCompanyInfo.personality +  " | StockValue: " + formatter.format(currentCompanyInfo.stockValue) + " | Capital: " + currentCompanyInfo.currentCapital + " | Parent: " + currentCompanyInfo.currentMotherCompany);
-				}
-
-			}
-
-			if (PRINT_ECONOMY) {
-				System.out.println("\n============ COMPANY STOCK MAPS ============");
-			}
-
-			for (String keyOuter : companyStocksMap.keySet()) {
-				HashMap<String, Integer> currentCompanyStocks = companyStocksMap.get(keyOuter);
-
-				if (PRINT_ECONOMY) {
-					System.out.println(keyOuter + " stocks are in companies: ");
-					for (String keyInner : currentCompanyStocks.keySet()) {
-						System.out.println("\t" + keyInner + " - " + currentCompanyStocks.get(keyInner));
-					}
-				}
-			}
+			printRanking();
+			printCompanies();
+			printStockMaps();
 
 		}
 
@@ -302,21 +273,89 @@ public class EconomyAgent extends Agent {
 		} while (valuesChanged);
 
 		// Reset the parents and total company value
-		for (String key : companyOtherInfoMap.keySet()) {
-			CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(key);
+		for (String currentCompany : companyOtherInfoMap.keySet()) {
+			CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(currentCompany);
 			
 			currentCompanyInfo.currentCompanyValue = null;
 
-			String companyParent = companyParentMap.get(key);
+			String companyParent = companyParentMap.get(currentCompany);
 			if (companyParent == null) {
-				currentCompanyInfo.currentMotherCompany = null;
+				currentCompanyInfo.currentParentCompany = null;
+				// Add to rankingMap, because this company does not have a parent company
+				double tempCapital = currentCompanyInfo.currentCapital;
+				rankingMap.put(currentCompany, tempCapital);
 			} else {
-				currentCompanyInfo.currentMotherCompany = companyParent;
-				// TODO: Add value to companyParent's total company value?
+				currentCompanyInfo.currentParentCompany = companyParent;
 			}
 			
-			companyOtherInfoMap.put(key, currentCompanyInfo);
+			companyOtherInfoMap.put(currentCompany, currentCompanyInfo);
+		}
+
+		// Add value to the parent company
+		for (String currentCompany : companyOtherInfoMap.keySet()) {
+			CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(currentCompany);
+
+			// has a parent, so add value to him
+			String companyParent = currentCompanyInfo.currentParentCompany;
+			if (companyParent != null) {
+				double currentValue = rankingMap.get(companyParent);
+				currentValue += currentCompanyInfo.currentCapital;
+				rankingMap.put(companyParent, currentValue);
+			}
 		}
 
 	}
+
+	protected void printRanking () {
+		if (PRINT_ECONOMY) {
+			System.out.println("\n///////////////////////////////////////////////////////////////\n");
+			System.out.println("============ COMPANY RANKING ============");
+		}
+
+		for (String currentCompany : rankingMap.keySet()) {
+			double currentCompanyValue = rankingMap.get(currentCompany);
+
+			if (PRINT_ECONOMY) {
+				System.out.println("NAME: " + currentCompany + " | TotalValue: " + currentCompanyValue);
+			}
+		}
+	}
+
+	protected void printCompanies () {
+		if (PRINT_ECONOMY) {
+			System.out.println("\n///////////////////////////////////////////////////////////////\n");
+			System.out.println("============ COMPANY STOCK VALUES ============");
+		}
+
+		for (String key : companyOtherInfoMap.keySet()) {
+			CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(key);
+			// Pick next value from a normal distribution with mean=currentValue and std-deviation=1
+			// Min action value is 0.01 (to avoid negative values)
+			currentCompanyInfo.stockValue = Math.max(0.01, (ThreadLocalRandom.current().nextGaussian() * 1 + currentCompanyInfo.stockValue));
+
+			companyOtherInfoMap.put(key, currentCompanyInfo);
+
+			if (PRINT_ECONOMY) {
+				System.out.println("NAME: " + key + " | Type: " + currentCompanyInfo.personality +  " | StockValue: " + formatter.format(currentCompanyInfo.stockValue) + " | Capital: " + currentCompanyInfo.currentCapital + " | Parent: " + currentCompanyInfo.currentParentCompany);
+			}
+		}
+	}
+
+	protected void printStockMaps () {
+		if (PRINT_ECONOMY) {
+			System.out.println("\n============ COMPANY STOCK MAPS ============");
+		}
+
+		for (String keyOuter : companyStocksMap.keySet()) {
+			HashMap<String, Integer> currentCompanyStocks = companyStocksMap.get(keyOuter);
+
+			if (PRINT_ECONOMY) {
+				System.out.println(keyOuter + " stocks are in companies: ");
+				for (String keyInner : currentCompanyStocks.keySet()) {
+					System.out.println("\t" + keyInner + " - " + currentCompanyStocks.get(keyInner));
+				}
+			}
+		}
+	}
+
 }

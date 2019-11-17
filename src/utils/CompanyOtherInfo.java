@@ -12,14 +12,14 @@ public class CompanyOtherInfo implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	public Integer currentCapital;
-	public String currentMotherCompany;
+	public String currentParentCompany;
 	public Double stockValue;
     public CompanyPersonality personality;
 	public Double currentCompanyValue; // calculated by EconomyAgent
 
-	public CompanyOtherInfo (Integer currentCapital, String currentMotherCompany, Double stockValue, CompanyPersonality personality) {
+	public CompanyOtherInfo (Integer currentCapital, String currentParentCompany, Double stockValue, CompanyPersonality personality) {
 		this.currentCapital = currentCapital;
-		this.currentMotherCompany = currentMotherCompany;
+		this.currentParentCompany = currentParentCompany;
 		this.stockValue = stockValue;
 		this.personality = personality;
 	}

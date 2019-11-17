@@ -527,8 +527,8 @@ public class CompanyAgent extends Agent {
 
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 
-		// Company's starting capital is a random value between 30000 and 60000
-		companyCapital = ThreadLocalRandom.current().nextInt(30000, 60001);
+		// Company's starting capital is a random value between 60000 and 100000
+		companyCapital = ThreadLocalRandom.current().nextInt(60000, 100001);
 		System.out.printf("\t> %s Capital: %d\n", getLocalName(), companyCapital);
 
 		// Company's initial stock map has only 1 entry, the companies' own stock, with

@@ -1,7 +1,10 @@
 package agents.EconomyAgent;
 
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.Collections;
+import java.util.Comparator;
 import java.text.DecimalFormat;
 import java.io.IOException;
 
@@ -313,12 +316,19 @@ public class EconomyAgent extends Agent {
 			System.out.println("============ COMPANY RANKING ============");
 		}
 
-		for (String currentCompany : rankingMap.keySet()) {
-			double currentCompanyValue = rankingMap.get(currentCompany);
+		HashMap<String,Double> tmp = new HashMap<>(this.rankingMap);
 
+		while (!tmp.isEmpty()) {
+			Entry<String, Double> maxEntry = Collections.max(tmp.entrySet(), new Comparator<Entry<String, Double>>() {
+				public int compare(Entry<String, Double> e1, Entry<String, Double> e2) {
+					return e1.getValue()
+						.compareTo(e2.getValue());
+				}
+			});
 			if (PRINT_ECONOMY) {
-				System.out.println("NAME: " + currentCompany + " | TotalValue: " + currentCompanyValue);
+				System.out.println("NAME: " + maxEntry.getKey() + " | TotalValue: " + maxEntry.getValue());
 			}
+			tmp.remove(maxEntry.getKey());
 		}
 	}
 

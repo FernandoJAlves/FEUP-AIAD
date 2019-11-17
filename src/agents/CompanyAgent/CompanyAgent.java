@@ -83,9 +83,6 @@ public class CompanyAgent extends Agent {
 			case DEAL:
 				this.deal(msg);
 				break;
-			case MARKET:
-				this.market();
-				break;
 			case CLOSE:
 				this.close(msg);
 				break;
@@ -366,10 +363,6 @@ public class CompanyAgent extends Agent {
 			actualOffer = null;
 			dealAgent = "";
 			setState(CompanyState.SEARCH);
-		}
-
-		public void market() {
-
 		}
 
 		public void rejectProposals(ACLMessage msg) {

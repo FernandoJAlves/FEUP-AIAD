@@ -57,6 +57,7 @@ public class CompanyAgent extends Agent {
 		 *
 		 */
 		private static final long serialVersionUID = 1L;
+		private int tries = 0;
 
 		public CompanyBehaviour(Agent a, int miliseconds) {
 			super(a, miliseconds);
@@ -288,7 +289,13 @@ public class CompanyAgent extends Agent {
 		}
 
 		public void negotiate(ACLMessage msg) {
-
+			tries++;
+			if (tries > 5){
+				tries = 0;
+				setState(CompanyState.WORK);
+				dealAgent = "";
+				actualOffer = null;
+			}
 		}
 
 		public void buy(ACLMessage msg) {
@@ -395,6 +402,7 @@ public class CompanyAgent extends Agent {
 			do {
 				int chosenCompany = ThreadLocalRandom.current().nextInt(0, companies.size());
 				companyToContact = companies.get(chosenCompany);
+				System.out.println(getLocalName() + " loop1");
 				// TODO: Handle extreme edge case that leads to this being an infinite loop (especially if the rookie can rebuy its stocks)
 			} while (companyToContact.equals(getLocalName()));
 
@@ -415,7 +423,7 @@ public class CompanyAgent extends Agent {
 				if (offerStockCount * queryResult.companyOtherInfo.stockValue < companyCapital) {
 					viable = true;
 				}
-
+				System.out.println(getLocalName() + " loop2");
 			} while (!viable);
 
 			AID receiver = getCompanyAID(companyToContact);

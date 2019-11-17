@@ -320,7 +320,10 @@ public class EconomyAgent extends Agent {
 
 		HashMap<String,Double> tmp = new HashMap<>(this.rankingMap);
 
+		int place = 0;
+
 		while (!tmp.isEmpty()) {
+			place++;
 			Entry<String, Double> maxEntry = Collections.max(tmp.entrySet(), new Comparator<Entry<String, Double>>() {
 				public int compare(Entry<String, Double> e1, Entry<String, Double> e2) {
 					return e1.getValue()
@@ -328,7 +331,7 @@ public class EconomyAgent extends Agent {
 				}
 			});
 			if (PRINT_ECONOMY) {
-				System.out.println("NAME: " + maxEntry.getKey() + " | TotalValue: " + maxEntry.getValue());
+				System.out.println(place + "º Place: " + maxEntry.getKey() + " | TotalValue: " + maxEntry.getValue());
 			}
 			tmp.remove(maxEntry.getKey());
 		}

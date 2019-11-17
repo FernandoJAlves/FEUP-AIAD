@@ -330,7 +330,6 @@ public class CompanyAgent extends Agent {
 				companyStocksMap.put(actualOffer.getCompanyName(), tempStockAmount - actualOffer.getStockCount());
 			} else {
 				System.out.println("(!) ERROR: KEY NOT FOUND: " + actualOffer.getCompanyName());
-				// TODO: after we fix message, this print and if/else can probably be deleted
 			}
 
 			// Notify Economy - TODO: Function this? (used somewhere else I believe)
@@ -385,19 +384,30 @@ public class CompanyAgent extends Agent {
 		}
 
 		public ACLMessage rookieStrategy() {
+			
+			// TODO: Maybe rookie wont be able to rebuy his stocks? Either that or add extra logic with getCompaniesWithSelf()
+
+			// Choose a company to invest
 			int companyIndex = ThreadLocalRandom.current().nextInt(0, companyAgents.length);
+			AID companyToInvest = companyAgents[companyIndex].getName();
 
-			StockMapSingleMessage queryResult = queryEconomy(companyAgents[companyIndex].getName());
+			// Query to know which companies have that company's stocks
+			StockMapSingleMessage queryResult = queryEconomy(companyToInvest);
 
+			// Pick one company to contact
 			ArrayList<String> companies = new ArrayList<String>(queryResult.companyStocks.keySet());
+			String companyToContact = null;
 
-			int chosenCompany = ThreadLocalRandom.current().nextInt(0, companies.size());
+			do {
+				int chosenCompany = ThreadLocalRandom.current().nextInt(0, companies.size());
+				companyToContact = companies.get(chosenCompany);
+				// TODO: Handle extreme edge case that leads to this being an infinite loop (especially if the rookie can rebuy its stocks)
+			} while (companyToContact.equals(getLocalName()));
 
-			String companyName = companies.get(chosenCompany);
-			int stockCount = queryResult.companyStocks.get(companyName);
+			int stockCount = queryResult.companyStocks.get(companyToContact);
 
+			// TODO: Ajust these values for more interesting results
 			// Will now pick an offer between 0 and min(stockCount,maxStockAmmount/2), and if viable (enough capital), make the offer
-
 			boolean viable = false;
 			double maxAmountDouble = maxStockAmmount;
 			int offerStockCount;
@@ -412,15 +422,15 @@ public class CompanyAgent extends Agent {
 
 			} while (!viable);
 
-			AID receiver = getCompanyAID(companyName);
+			AID receiver = getCompanyAID(companyToContact);
 
-			// TODO: Continue debug here
-			// System.out.println(" > " + getLocalName() + " | investingIn: " + companyName);
+			// TODO: If everything ok, remove these prints
+			// System.out.println(" > " + getLocalName() + " | investingIn: " + companyToInvest.getName());
 			// System.out.println(" > " + getLocalName() + " | stockCount: " + offerStockCount + " | receiver: " + receiver);
 
 			int offerValue = (int) Math.ceil(offerStockCount * queryResult.companyOtherInfo.stockValue);
 
-			ACLMessage offer = makeOfferMessage(companyName, offerStockCount, offerValue, receiver);
+			ACLMessage offer = makeOfferMessage(companyToInvest.getLocalName(), offerStockCount, offerValue, receiver);
 
 			return offer;
 		}
@@ -561,6 +571,21 @@ public class CompanyAgent extends Agent {
 			e.printStackTrace();
 		}
 		this.companyAgents = agents;
+	}
+
+	protected DFAgentDescription[] getCompaniesWithSelf() {
+		DFAgentDescription dfd = new DFAgentDescription();
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType("CompanyAgent");
+		dfd.addServices(sd);
+		DFAgentDescription[] agents = null;
+		try {
+			agents = DFService.search(this, dfd);
+		} catch (FIPAException e) {
+			agents = new DFAgentDescription[0];
+			e.printStackTrace();
+		}
+		return agents;
 	}
 
 	protected void sendCustom(ACLMessage msg) {

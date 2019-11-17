@@ -273,6 +273,7 @@ public class EconomyAgent extends Agent {
 		} while (valuesChanged);
 
 		// Reset the parents and total company value
+		rankingMap.clear();
 		for (String currentCompany : companyOtherInfoMap.keySet()) {
 			CompanyOtherInfo currentCompanyInfo = companyOtherInfoMap.get(currentCompany);
 			
@@ -336,7 +337,7 @@ public class EconomyAgent extends Agent {
 			companyOtherInfoMap.put(key, currentCompanyInfo);
 
 			if (PRINT_ECONOMY) {
-				System.out.println("NAME: " + key + " | Type: " + currentCompanyInfo.personality +  " | StockValue: " + formatter.format(currentCompanyInfo.stockValue) + " | Capital: " + currentCompanyInfo.currentCapital + " | Parent: " + currentCompanyInfo.currentParentCompany);
+				System.out.println("NAME: " + key +  " | StockValue: " + formatter.format(currentCompanyInfo.stockValue) + " | Capital: " + currentCompanyInfo.currentCapital + "$ | Type: " + currentCompanyInfo.personality + " | Parent: " + currentCompanyInfo.currentParentCompany);
 			}
 		}
 	}

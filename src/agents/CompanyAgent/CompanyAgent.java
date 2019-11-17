@@ -21,6 +21,7 @@ import agents.CompanyAgent.CompanyGlobals.*;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import messages.*;
+import utils.*;
 
 public class CompanyAgent extends Agent {
 
@@ -176,7 +177,7 @@ public class CompanyAgent extends Agent {
 						}
 					} else if (msg.getPerformative() == ACLMessage.REJECT_PROPOSAL) {
 						String content = msg.getContent();
-						setState(CompanyState.WORK);
+						shouldGoToWork();
 						if ((content != null) && (content.indexOf("BUSY") != -1)) {
 							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUSY
 							// message from "
@@ -260,9 +261,18 @@ public class CompanyAgent extends Agent {
 
 			// TODO: Decide if the state should change to SEARCH (depends on the
 			// personality?)
-			if (this.shouldStop()) {
-				setState(CompanyState.SEARCH);
-			}
+			
+			// TODO: Revert this when done
+			// if ((getLocalName()).equals("company4")) {
+			// 	System.out.println(getLocalName() + " is in WORK");
+			// }
+
+			// if (this.shouldStop()) {
+			// 	if ((getLocalName()).equals("company4")) {
+			// 		System.out.println(getLocalName() + " left WORK to SEARCH");
+			// 	}
+			// 	setState(CompanyState.SEARCH);
+			// }
 
 			return;
 		}
@@ -380,13 +390,10 @@ public class CompanyAgent extends Agent {
 			case ROOKIE:
 				return this.rookieStrategy();
 			case ADVANCED:
-				// TODO: this
-				this.advancedStrategy();
-				break;
+				return this.advancedStrategy();
 			default:
 				return this.rookieStrategy();
 			}
-			return null;
 		}
 
 		public ACLMessage rookieStrategy() {
@@ -441,8 +448,88 @@ public class CompanyAgent extends Agent {
 			return offer;
 		}
 
-		public void advancedStrategy() {
-			queryEconomy();
+		public ACLMessage advancedStrategy() {
+			
+			// Get all companies
+			// Find parent company
+			// Pick the company with the lowest stock value that isn't owned by this company (or its parent?) Maybe add more that just the lowest?
+			// Find the company with the highest amount of stocks of that company (that isn't this company)
+			// Create an offer that gets either the min(stockAmount, 10000/2 + 1)
+
+			// Get all companies
+			StockMapAllMessage queryResult = queryEconomy();
+
+			// Find parent company
+			String localParentCompany = queryResult.companyOtherInfoMap.get(getLocalName()) == null
+				? null
+				: queryResult.companyOtherInfoMap.get(getLocalName()).currentParentCompany;
+
+			if (localParentCompany == null) 
+				localParentCompany = ""; 
+
+			// Pick the company with the lowest stock value that isn't owned by this company or its parent
+			String lowestCompanyName = null;
+			Double lowestCompanyValue = 100000.0; // Starting with a really high value
+
+			for (String currentCompany : queryResult.companyOtherInfoMap.keySet()) {
+				CompanyOtherInfo currentCompanyInfo = queryResult.companyOtherInfoMap.get(currentCompany);
+
+				// If the currentCompany is already owned by this company or its parent, continue
+				if (localParentCompany.equals(currentCompanyInfo.currentParentCompany) 
+					|| (getLocalName()).equals(currentCompanyInfo.currentParentCompany)) {
+					continue;
+				} 
+
+				// If the localCompany has all its stocks, don't invest in itself
+				if (currentCompany.equals(getLocalName()) && companyStocksMap.get(getLocalName()) == maxStockAmmount) {
+					continue;
+				}
+
+				if (currentCompanyInfo.stockValue < lowestCompanyValue) {
+					lowestCompanyName = currentCompany;
+					lowestCompanyValue = currentCompanyInfo.stockValue;
+				}
+			}
+			
+			// Find the company with the highest amount of stocks of that company (that isn't this company)
+			HashMap<String, Integer> companyInvestingInStockMap = queryResult.companyStocksMap.get(lowestCompanyName);
+
+			System.out.println("Investing map: " + companyInvestingInStockMap);
+
+			if (companyInvestingInStockMap == null) return null;
+
+			// If the chosen company is itself, and all the stocks are currently with itself, return null
+			if (companyInvestingInStockMap.size() == 1 && companyInvestingInStockMap.get(getLocalName()) != null) {
+				System.out.println("Returning null");
+				return null;
+			}
+
+			String maximumStockOwner = null;
+			Integer maximumStockAmount = 0;
+
+			// Get maximum
+			for (String currentCompany : companyInvestingInStockMap.keySet()) {
+				Integer currentStockAmount = companyInvestingInStockMap.get(currentCompany);
+
+				// don't contact self
+				if (currentCompany.equals(getLocalName())) {
+					continue;
+				}
+
+				if (currentStockAmount > maximumStockAmount) {
+					maximumStockOwner = currentCompany;
+					maximumStockAmount = currentStockAmount;
+				}
+			}
+			
+			System.out.println("Chosen max: " + maximumStockOwner);
+
+			if (maximumStockOwner == null) return null;
+
+			// TODO: Fix offer creation
+			Integer stockWanted = Math.min(maxStockAmmount/2, 0);
+
+			return makeOfferMessage(lowestCompanyName, 5001, 20000, getCompanyAID(maximumStockOwner));
 		}
 
 		public StockMapAllMessage queryEconomy() {
@@ -482,7 +569,23 @@ public class CompanyAgent extends Agent {
 		}
 
 		public boolean shouldStop() {
-			return companyCapital >= (70000 + (ThreadLocalRandom.current().nextGaussian() * 50000));
+			// If capital if low, don't stop working
+			if (companyCapital < 20000) {
+				return false;
+			}
+
+			switch (personality) {
+				case ROOKIE:
+					// 1 in 5 chance of leaving work
+					return ThreadLocalRandom.current().nextInt(0,6) == 0;
+				case ADVANCED:
+					// 1 in 2 chance of leaving work
+					return ThreadLocalRandom.current().nextInt(0,3) == 0;
+				default:
+					return false;
+			}
+
+			// return companyCapital >= (70000 + (ThreadLocalRandom.current().nextGaussian() * 50000));
 		}
 
 		public boolean shouldReject(StockOffer offer) {
@@ -501,7 +604,7 @@ public class CompanyAgent extends Agent {
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {
-		// this.setupPersonality();
+		this.setupPersonality();
 
 		System.out.println("\t> Starting Company: " + getLocalName());
 
@@ -673,5 +776,18 @@ public class CompanyAgent extends Agent {
 			break;
 		}
 		System.out.println(this.personality);
+	}
+
+	protected void shouldGoToWork() {
+		switch (personality) {
+			case ROOKIE:
+				setState(CompanyState.WORK);
+				break;
+			case ADVANCED:
+				setState(CompanyState.SEARCH);
+				break;
+			default:
+				break;
+		}
 	}
 }

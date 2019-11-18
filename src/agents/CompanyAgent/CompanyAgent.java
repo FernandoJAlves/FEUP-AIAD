@@ -443,7 +443,7 @@ public class CompanyAgent extends Agent {
 			if (localParentCompany == null) 
 				localParentCompany = ""; 
 
-			// Pick the company with the lowest stock value that isn't owned by this company or its parent
+			// Pick the companies with the lowest stock value that isn't owned by this company or its parent
 
 			for (int index = 0; index < numberOfSelectedCompanies; index++) {
 				String lowestCompanyName = null;
@@ -499,7 +499,6 @@ public class CompanyAgent extends Agent {
 
 			// If the chosen company is itself, and all the stocks are currently with itself, return null
 			if (companyInvestingInStockMap.size() == 1 && companyInvestingInStockMap.get(getLocalName()) != null) {
-				System.out.println("Returning null");
 				return null;
 			}
 
@@ -520,8 +519,6 @@ public class CompanyAgent extends Agent {
 					maximumStockAmount = currentStockAmount;
 				}
 			}
-			
-			System.out.println("Chosen max: " + maximumStockOwner);
 
 			if (maximumStockOwner == null) return null;
 
@@ -801,7 +798,6 @@ public class CompanyAgent extends Agent {
 			this.personality = CompanyPersonality.ROOKIE;
 			break;
 		}
-		System.out.println(this.personality);
 	}
 
 }

@@ -8,6 +8,9 @@
 # Log file
 *.log
 
+# Dataset file
+data.csv
+
 # BlueJ files
 *.ctxt
 

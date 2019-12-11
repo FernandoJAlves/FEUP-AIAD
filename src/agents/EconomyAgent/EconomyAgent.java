@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.text.DecimalFormat;
 import java.io.IOException;
 
-import jade.core.*;
+import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.ACLMessage;
 import jade.domain.DFService;
@@ -18,6 +18,13 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.UnreadableException;
+
+import java.util.Date;
+import java.io.File;
+import java.io.IOException;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.PrintWriter;
 
 import messages.*;
 import utils.*;
@@ -203,6 +210,8 @@ public class EconomyAgent extends Agent {
 			myLogger.log(Logger.SEVERE, "Agent " + getLocalName() + " - Cannot register with DF", e);
 			doDelete();
 		}
+
+		Runtime.getRuntime().addShutdownHook(new Thread(EconomyAgent::generateCSV));
 	}
 
 	protected void updateStockMapAfterTransaction (TransactionNotifyMessage content) {
@@ -366,4 +375,24 @@ public class EconomyAgent extends Agent {
 		}
 	}
 
+	// add array of TransactionInfo to generateCSV's arguments
+	protected static void generateCSV(){
+		String filename = "data.csv";
+		File file = new File(filename);
+		boolean fileExists = file.exists();
+
+		try (FileWriter fw = new FileWriter(filename, true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			PrintWriter out = new PrintWriter(bw))
+		{
+			// add variables header to CSV if file doesn't exist
+			if(!fileExists)
+				out.println("V1;V2;V3");
+
+			// loop through TransactionInfo to output variable data 
+			out.println("1;2;3");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 }

@@ -144,15 +144,15 @@ public class CompanyAgent extends Agent {
 						StockOffer offer = getOffer(msg);
 						if ((offer != null) && (offer.getTag().equals("BUY"))) {
 							if (this.shouldReject(offer)) {
+								// TODO: Notify economy of rejected offer
+								// System.out.print("!!! REJECTED !!!");
 								this.customRejectProposals(msg, "REFUSED");
 								return;
 							}
+							// System.out.print("!!! ACCEPTED !!!");
 							setState(CompanyState.DEAL);
 							dealAgent = msg.getSender().getLocalName();
 							actualOffer = offer;
-							// myLogger.log(Logger.INFO, "Agent " + getLocalName() + " - Received BUY
-							// message from "
-							// + msg.getSender().getLocalName());
 						}
 					}
 					break;
@@ -593,7 +593,6 @@ public class CompanyAgent extends Agent {
 
 		public boolean shouldReject(StockOffer offer) {
 
-
 			if (companyStocksMap.get(offer.getCompanyName()) == null){
 				return true;
 			}
@@ -602,7 +601,14 @@ public class CompanyAgent extends Agent {
 				return true;
 			}
 
-			return false;
+			switch (personality) {
+				case ROOKIE:
+					return shouldRejectRookie(offer);
+				case ADVANCED:
+					return shouldRejectAdvanced(offer);
+				default:
+					return shouldRejectRookie(offer);
+			}
 		}
 
 
@@ -631,6 +637,44 @@ public class CompanyAgent extends Agent {
 			}
 		}
 
+		protected boolean shouldRejectRookie (StockOffer offer) {
+			System.out.println("$$$ REJECT ROOKIE $$$");
+			double offerProportion = (offer.getOfferStockValue() / offer.getRealStockValue());
+			System.out.println("Proportion: " + offerProportion);
+
+			if (offerProportion < 1.1) { // always reject
+				return true; 
+			} else if (offerProportion < 1.4) { // 75% chance to accept
+				double randomizer = ThreadLocalRandom.current().nextDouble(0, 1); 
+				if (randomizer < 0.75) {
+					return false;
+				} else {
+					return true;
+				}	
+			} else { // always accept
+				return false;
+			}
+		}
+
+		protected boolean shouldRejectAdvanced (StockOffer offer) {
+			System.out.println("$$$ REJECT ADVANCED $$$");
+			double offerProportion = (offer.getOfferStockValue() / offer.getRealStockValue());
+			System.out.println("Proportion: " + offerProportion);
+
+			if (offerProportion < 1.2) { // always reject
+				return true; 
+			} else if (offerProportion < 1.45) { // 75% chance to accept
+				double randomizer = ThreadLocalRandom.current().nextDouble(0, 1); 
+				if (randomizer < 0.75) {
+					return false;
+				} else {
+					return true;
+				}	
+			} else { // always accept
+				return false;
+			}
+		}
+
 	} // END of inner class CompanyBehaviour
 
 	protected void setup() {
@@ -648,7 +692,7 @@ public class CompanyAgent extends Agent {
 		dfd.addServices(sd);
 		try {
 			DFService.register(this, dfd);
-			int ticks = ThreadLocalRandom.current().nextInt(5, 11) * 1000;
+			int ticks = ThreadLocalRandom.current().nextInt(5, 11) * 500;  // TODO: Adjust this
 			CompanyBehaviour companyBehaviour = new CompanyBehaviour(this, ticks);
 			addBehaviour(companyBehaviour);
 		} catch (FIPAException e) {

@@ -102,7 +102,7 @@ public class EconomyAgent extends Agent {
 					}
 
 					// Relevant print
-					System.out.println("\n >>>> (!!!) TRANSACTION: " + content.sellerName + " SOLD " + content.stockAmount + " STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " FOR " + content.transactionCost + "$ (!!!)"); 
+					System.out.println("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>> (!!!) TRANSACTION: " + content.sellerName + " SOLD " + content.stockAmount + " STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " FOR " + content.transactionCost + "$ (!!!)"); 
 
 					// Atualizar Mapa Acções
 					updateStockMapAfterTransaction(content);

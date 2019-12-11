@@ -398,10 +398,14 @@ public class CompanyAgent extends Agent {
 
 			int stockCount = queryResult.companyStocks.get(companyToContact);
 
+			// Choose price to pay per stock
+			double realStockValue = queryResult.companyOtherInfo.stockValue;
+			double offerStockValue = ThreadLocalRandom.current().nextDouble(0.85, 1.8) * realStockValue;
+
 			// Will now pick an offer between 0.5 (min(stockCount,maximumStockToAsk)) and min(stockCount,maximumStockToAsk), and if viable (enough capital), make the offer
 			boolean viable = false;
 
-			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/(queryResult.companyOtherInfo.stockValue));
+			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/(offerStockValue));
 			int offerStockCount;
 
 			do {
@@ -409,7 +413,7 @@ public class CompanyAgent extends Agent {
 				int minStockToBuy = (int) Math.floor(0.5 * (double) maxStockToBuy);
 				offerStockCount = ThreadLocalRandom.current().nextInt(minStockToBuy, maxStockToBuy + 1);
 
-				if (offerStockCount * queryResult.companyOtherInfo.stockValue < companyCapital) {
+				if (offerStockCount * offerStockValue < companyCapital) {
 					viable = true;
 				}
 
@@ -417,9 +421,9 @@ public class CompanyAgent extends Agent {
 
 			AID receiver = getCompanyAID(companyToContact);
 
-			int offerValue = (int) Math.ceil(offerStockCount * queryResult.companyOtherInfo.stockValue);
+			int offerValue = (int) Math.ceil(offerStockCount * offerStockValue);
 
-			ACLMessage offer = makeOfferMessage(companyToInvest.getLocalName(), offerStockCount, offerValue, receiver);
+			ACLMessage offer = makeOfferMessage(companyToInvest.getLocalName(), offerStockCount, offerValue, receiver, offerStockValue, realStockValue);
 
 			return offer;
 		}
@@ -490,7 +494,8 @@ public class CompanyAgent extends Agent {
 			// Choose a company randomly
 			Integer chosenIndex = ThreadLocalRandom.current().nextInt(0, numberOfSelectedCompanies);
 			String chosenLowestCompany = lowestCompanyList.get(chosenIndex);
-			Double chosenLowestValue = lowestCompanyValueList.get(chosenIndex);
+			Double realStockValue = lowestCompanyValueList.get(chosenIndex);
+			Double offerStockValue = ThreadLocalRandom.current().nextDouble(0.85, 1.8) * realStockValue;
 			
 			// Find the company with the highest amount of stocks of that company (that isn't this company)
 			HashMap<String, Integer> companyInvestingInStockMap = queryResult.companyStocksMap.get(chosenLowestCompany);
@@ -523,11 +528,11 @@ public class CompanyAgent extends Agent {
 			if (maximumStockOwner == null) return null;
 
 			// Calculate ideal amount of stocks to buy
-			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/chosenLowestValue);
+			Integer maximumStockToAsk = (int) Math.round((0.9*companyCapital)/offerStockValue);
 			Integer stockWanted = Math.min(maximumStockToAsk, Math.min((maxStockAmmount/2 + 1), maximumStockAmount));
-			Integer offerCost = (int) Math.round(stockWanted*chosenLowestValue);
+			Integer offerCost = (int) Math.round(stockWanted*offerStockValue);
 
-			return makeOfferMessage(chosenLowestCompany, stockWanted, offerCost, getCompanyAID(maximumStockOwner));
+			return makeOfferMessage(chosenLowestCompany, stockWanted, offerCost, getCompanyAID(maximumStockOwner), offerStockValue, realStockValue);
 		}
 
 		public StockMapAllMessage queryEconomy() {
@@ -739,11 +744,13 @@ public class CompanyAgent extends Agent {
 		send(msg);
 	}
 
-	protected ACLMessage makeOfferMessage(String companyName, int stockCount, int value, AID receiver) {
+	protected ACLMessage makeOfferMessage(String companyName, int stockCount, int value, AID receiver, double offerStockValue, double realStockValue) {
+		// System.out.println("\tDEBUG: Real -> " + realStockValue + "\tOffer ->" + offerStockValue + "\tProportion ->" + offerStockValue/realStockValue);
+		
 		ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 
 		try {
-			StockOffer so = new StockOffer(companyName, stockCount, value);
+			StockOffer so = new StockOffer(companyName, stockCount, value, offerStockValue, realStockValue);
 			actualOffer = so;
 			msg.setContentObject(so);
 		} catch (IOException e) {

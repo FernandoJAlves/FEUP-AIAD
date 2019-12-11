@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.ArrayList;
 import java.text.DecimalFormat;
 import java.io.IOException;
 
@@ -34,6 +35,8 @@ public class EconomyAgent extends Agent {
 	private HashMap<String, HashMap<String, Integer>> companyStocksMap = new HashMap<String, HashMap<String, Integer>>(); // stocks location
 	private HashMap<String, CompanyOtherInfo> companyOtherInfoMap = new HashMap<String, CompanyOtherInfo>(); // company capital and mother-company map
 	private HashMap<String, Double> rankingMap = new HashMap<String, Double>();
+
+	private ArrayList<TransactionNotifyMessage> transactionLog = new ArrayList<TransactionNotifyMessage>();
 
 	private static DecimalFormat formatter = new DecimalFormat("#.000");
 
@@ -104,11 +107,16 @@ public class EconomyAgent extends Agent {
 					// Relevant print
 					System.out.println("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>> (!!!) TRANSACTION: " + content.sellerName + " SOLD " + content.stockAmount + " STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " FOR " + content.transactionCost + "$ (!!!)"); 
 
-					// Atualizar Mapa Acções
-					updateStockMapAfterTransaction(content);
+					// Adicionar transação ao log -> TODO: Maybe create a transactioninfo object and push that
+					transactionLog.add(content);
 
-					// Atualizar Mapa de OtherInfo
-					updateOtherInfoMapAfterTransaction(content);
+					if (content.acceptance) {
+						// Atualizar Mapa Acções
+						updateStockMapAfterTransaction(content);
+
+						// Atualizar Mapa de OtherInfo
+						updateOtherInfoMapAfterTransaction(content);
+					}
 
 					break;
 				}

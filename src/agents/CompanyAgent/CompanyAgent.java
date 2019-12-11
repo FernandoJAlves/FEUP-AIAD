@@ -332,8 +332,8 @@ public class CompanyAgent extends Agent {
 			// Notify Economy
 			ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
 
-			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(),
-					actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue());
+			// acceptance = true in this case
+			TransactionNotifyMessage content = new TransactionNotifyMessage(dealAgent, getLocalName(), actualOffer.getCompanyName(), actualOffer.getStockCount(), actualOffer.getOfferValue(), true, actualOffer.getRealStockValue(), actualOffer.getOfferStockValue(), personality);
 			try {
 				notifyEconomyMsg.setContentObject(content);
 			} catch (IOException e) {

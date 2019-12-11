@@ -144,12 +144,25 @@ public class CompanyAgent extends Agent {
 						StockOffer offer = getOffer(msg);
 						if ((offer != null) && (offer.getTag().equals("BUY"))) {
 							if (this.shouldReject(offer)) {
-								// TODO: Notify economy of rejected offer
-								// System.out.print("!!! REJECTED !!!");
+
+								// Notify Economy
+								ACLMessage notifyEconomyMsg = new ACLMessage(ACLMessage.PROPAGATE);
+
+								// acceptance = false in this case
+								TransactionNotifyMessage content = new TransactionNotifyMessage(msg.getSender().getLocalName(), getLocalName(), offer.getCompanyName(), offer.getStockCount(), offer.getOfferValue(), false, offer.getRealStockValue(), offer.getOfferStockValue(), personality);
+								try {
+									notifyEconomyMsg.setContentObject(content);
+								} catch (IOException e) {
+									e.printStackTrace();
+									return;
+								}
+								notifyEconomyMsg.addReceiver(economyID);
+								sendCustom(notifyEconomyMsg);
+								// End Notify Economy
+
 								this.customRejectProposals(msg, "REFUSED");
 								return;
 							}
-							// System.out.print("!!! ACCEPTED !!!");
 							setState(CompanyState.DEAL);
 							dealAgent = msg.getSender().getLocalName();
 							actualOffer = offer;
@@ -638,9 +651,7 @@ public class CompanyAgent extends Agent {
 		}
 
 		protected boolean shouldRejectRookie (StockOffer offer) {
-			System.out.println("$$$ REJECT ROOKIE $$$");
 			double offerProportion = (offer.getOfferStockValue() / offer.getRealStockValue());
-			System.out.println("Proportion: " + offerProportion);
 
 			if (offerProportion < 1.1) { // always reject
 				return true; 
@@ -657,9 +668,7 @@ public class CompanyAgent extends Agent {
 		}
 
 		protected boolean shouldRejectAdvanced (StockOffer offer) {
-			System.out.println("$$$ REJECT ADVANCED $$$");
 			double offerProportion = (offer.getOfferStockValue() / offer.getRealStockValue());
-			System.out.println("Proportion: " + offerProportion);
 
 			if (offerProportion < 1.2) { // always reject
 				return true; 

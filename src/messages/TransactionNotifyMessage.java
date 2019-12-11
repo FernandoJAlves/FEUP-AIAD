@@ -21,6 +21,7 @@ public class TransactionNotifyMessage implements Serializable {
     public Double currentStockPrice;
     public Double paidStockPrice;
     public CompanyPersonality personality;
+    public long timeElapsed; // in miliseconds
 
     public TransactionNotifyMessage (String buyerName, String sellerName, String stockOwner, Integer stockAmount, Integer transactionCost, Boolean acceptance, Double currentStockPrice, Double paidStockPrice, CompanyPersonality personality) {
         this.buyerName = buyerName;

@@ -26,9 +26,11 @@ import java.io.IOException;
 import java.io.FileWriter;
 import java.io.BufferedWriter;
 import java.io.PrintWriter;
+import java.lang.System;
 
 import messages.*;
 import utils.*;
+import agents.CompanyAgent.CompanyGlobals.*;
 
 public class EconomyAgent extends Agent {
 
@@ -43,7 +45,8 @@ public class EconomyAgent extends Agent {
 	private HashMap<String, CompanyOtherInfo> companyOtherInfoMap = new HashMap<String, CompanyOtherInfo>(); // company capital and mother-company map
 	private HashMap<String, Double> rankingMap = new HashMap<String, Double>();
 
-	private ArrayList<TransactionNotifyMessage> transactionLog = new ArrayList<TransactionNotifyMessage>();
+	private static ArrayList<TransactionNotifyMessage> transactionLog = new ArrayList<TransactionNotifyMessage>();
+	private static long startTime;
 
 	private static DecimalFormat formatter = new DecimalFormat("#.000");
 
@@ -111,18 +114,22 @@ public class EconomyAgent extends Agent {
 						return;
 					}
 
-					// Relevant print
-					System.out.println("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>> (!!!) TRANSACTION: " + content.sellerName + " SOLD " + content.stockAmount + " STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " FOR " + content.transactionCost + "$ (!!!)"); 
-
 					// Adicionar transação ao log -> TODO: Maybe create a transactioninfo object and push that
+					content.timeElapsed = (System.nanoTime() - startTime) / 1000000;
 					transactionLog.add(content);
 
 					if (content.acceptance) {
+						// Relevant print
+						System.out.println("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>> (!!!) TRANSACTION: " + content.sellerName + " SOLD " + content.stockAmount + " STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " FOR " + content.transactionCost + "$ (!!!)"); 
+						
 						// Atualizar Mapa Acções
 						updateStockMapAfterTransaction(content);
 
 						// Atualizar Mapa de OtherInfo
 						updateOtherInfoMapAfterTransaction(content);
+					} else {
+						// Relevant print
+						System.out.println("\n >>>>>>>>>>>>>>>>>>>>>>>>>>>>> (!!!) REJECTION: " + content.sellerName + " REFUSED TO SELL " + content.stockAmount + " STOCKS OF " + content.stockOwner + " TO " + content.buyerName + " FOR " + content.transactionCost + "$ (!!!)"); 
 					}
 
 					break;
@@ -194,6 +201,7 @@ public class EconomyAgent extends Agent {
 	protected void setup() {
 
 		System.out.println("\t> Starting Economy: " + getLocalName());
+		startTime = System.nanoTime();
 
 		// Registration with the DF
 		DFAgentDescription agentDescription = new DFAgentDescription();
@@ -395,10 +403,30 @@ public class EconomyAgent extends Agent {
 		{
 			// add variables header to CSV if file doesn't exist
 			if(!fileExists)
-				out.println("V1;V2;V3");
+				out.println("acceptance;stock_ammount;cost;curr_stock_price;paid_stock_price;proportion;personality;life_time;buyer_name;seller_name;stock_owner_name");
 
 			// loop through TransactionInfo to output variable data 
-			out.println("1;2;3");
+			for (int i = 0; i < transactionLog.size(); i++) {
+				TransactionNotifyMessage msg = transactionLog.get(i);
+
+				String acceptance = (msg.acceptance ? "Y" : "N");
+				double proportion = (msg.paidStockPrice/msg.currentStockPrice);
+				String personalityChar = (msg.personality == CompanyPersonality.ROOKIE ? "R" : "A");
+
+				String line = String.format("%s;%s;%s;%.2f;%.2f;%.2f;%s;%s;%s;%s;%s", 
+											acceptance,
+											msg.stockAmount,
+											msg.transactionCost,
+											msg.currentStockPrice,
+											msg.paidStockPrice,
+											proportion,
+											personalityChar,
+											msg.timeElapsed, // in miliseconds
+											msg.buyerName,
+											msg.sellerName,
+											msg.stockOwner);
+				out.println(line);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

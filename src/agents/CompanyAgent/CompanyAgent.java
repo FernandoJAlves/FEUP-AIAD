@@ -715,7 +715,7 @@ public class CompanyAgent extends Agent {
 		dfd.addServices(sd);
 		try {
 			DFService.register(this, dfd);
-			int ticks = ThreadLocalRandom.current().nextInt(5, 11) * 500;  // TODO: Adjust this
+			int ticks = ThreadLocalRandom.current().nextInt(5, 11) * 250;  // TODO: Adjust this
 			CompanyBehaviour companyBehaviour = new CompanyBehaviour(this, ticks);
 			addBehaviour(companyBehaviour);
 		} catch (FIPAException e) {

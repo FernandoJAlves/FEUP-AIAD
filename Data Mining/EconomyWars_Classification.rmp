@@ -13,13 +13,13 @@
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
       <operator activated="true" class="read_csv" compatibility="9.5.001" expanded="true" height="68" name="Read CSV (4)" width="90" x="45" y="34">
-        <parameter key="csv_file" value="/home/joao/Documentos/AIAD/Data Mining/dataset.csv"/>
+        <parameter key="csv_file" value="/Users/falves/feup/FEUP-AIAD/Data Mining/dataset.csv"/>
         <parameter key="column_separators" value=";"/>
         <parameter key="trim_lines" value="false"/>
         <parameter key="use_quotes" value="true"/>
         <parameter key="quotes_character" value="&quot;"/>
         <parameter key="escape_character" value="\"/>
-        <parameter key="skip_comments" value="false"/>
+        <parameter key="skip_comments" value="true"/>
         <parameter key="comment_characters" value="#"/>
         <parameter key="starting_row" value="1"/>
         <parameter key="parse_numbers" value="true"/>
@@ -32,22 +32,22 @@
         <list key="annotations"/>
         <parameter key="time_zone" value="SYSTEM"/>
         <parameter key="locale" value="English (United States)"/>
-        <parameter key="encoding" value="SYSTEM"/>
+        <parameter key="encoding" value="UTF-8"/>
         <parameter key="read_all_values_as_polynominal" value="false"/>
         <list key="data_set_meta_data_information">
-          <parameter key="0" value="acceptance.true.text.label"/>
-          <parameter key="1" value="stock_amount.true.real.attribute"/>
+          <parameter key="0" value="acceptance.true.binominal.label"/>
+          <parameter key="1" value="stock_amount.true.integer.attribute"/>
           <parameter key="2" value="cost.true.integer.attribute"/>
           <parameter key="3" value="curr_stock_price.true.real.attribute"/>
           <parameter key="4" value="paid_stock_price.true.real.attribute"/>
           <parameter key="5" value="proportion.true.real.attribute"/>
-          <parameter key="6" value="personality.true.text.attribute"/>
+          <parameter key="6" value="personality.true.binominal.attribute"/>
           <parameter key="7" value="life_time.true.integer.attribute"/>
-          <parameter key="8" value="buyer_name.true.text.attribute"/>
-          <parameter key="9" value="seller_name.true.text.attribute"/>
-          <parameter key="10" value="stock_owner.true.text.attribute"/>
+          <parameter key="8" value="buyer_name.true.polynominal.attribute"/>
+          <parameter key="9" value="seller_name.true.polynominal.attribute"/>
+          <parameter key="10" value="stock_owner_name.true.polynominal.attribute"/>
         </list>
-        <parameter key="read_not_matching_values_as_missings" value="true"/>
+        <parameter key="read_not_matching_values_as_missings" value="false"/>
         <parameter key="datamanagement" value="double_array"/>
         <parameter key="data_management" value="auto"/>
       </operator>

@@ -655,13 +655,20 @@ public class CompanyAgent extends Agent {
 
 			if (offerProportion < 1.1) { // always reject
 				return true; 
-			} else if (offerProportion < 1.4) { // 75% chance to accept
+			} else if (offerProportion < 1.25) { // 80% chance to refuse
 				double randomizer = ThreadLocalRandom.current().nextDouble(0, 1); 
-				if (randomizer < 0.75) {
+				if (randomizer < 0.80) {
+					return true;
+				} else {
+					return false;
+				}	
+			} else if (offerProportion < 1.4) { // 80% chance to accept
+				double randomizer = ThreadLocalRandom.current().nextDouble(0, 1); 
+				if (randomizer < 0.80) {
 					return false;
 				} else {
 					return true;
-				}	
+				}			
 			} else { // always accept
 				return false;
 			}
@@ -672,9 +679,16 @@ public class CompanyAgent extends Agent {
 
 			if (offerProportion < 1.2) { // always reject
 				return true; 
-			} else if (offerProportion < 1.45) { // 75% chance to accept
+			} else if (offerProportion < 1.4) { // 80% chance to refuse
 				double randomizer = ThreadLocalRandom.current().nextDouble(0, 1); 
-				if (randomizer < 0.75) {
+				if (randomizer < 0.80) {
+					return true;
+				} else {
+					return false;
+				}	
+			} else if (offerProportion < 1.5) { // 80% chance to accept
+				double randomizer = ThreadLocalRandom.current().nextDouble(0, 1); 
+				if (randomizer < 0.80) {
 					return false;
 				} else {
 					return true;

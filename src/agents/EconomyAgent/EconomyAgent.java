@@ -403,7 +403,7 @@ public class EconomyAgent extends Agent {
 		{
 			// add variables header to CSV if file doesn't exist
 			if(!fileExists)
-				out.println("acceptance;stock_ammount;cost;curr_stock_price;paid_stock_price;proportion;personality;life_time;buyer_name;seller_name;stock_owner_name");
+				out.println("acceptance;stock_amount;cost;curr_stock_price;paid_stock_price;proportion;personality;life_time;buyer_name;seller_name;stock_owner_name");
 
 			// loop through TransactionInfo to output variable data 
 			for (int i = 0; i < transactionLog.size(); i++) {

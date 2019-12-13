@@ -201,7 +201,7 @@
         <parameter key="confidence" value="0.1"/>
         <parameter key="apply_prepruning" value="true"/>
         <parameter key="minimal_gain" value="0.01"/>
-        <parameter key="minimal_leaf_size" value="2"/>
+        <parameter key="minimal_leaf_size" value="4"/>
         <parameter key="minimal_size_for_split" value="4"/>
         <parameter key="number_of_prepruning_alternatives" value="3"/>
       </operator>
